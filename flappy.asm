@@ -163,7 +163,7 @@ antic_dl ;mode2 = 40x24 characters (960 bytes) for normal width, 48x24 character
     dta a(antic_dl) ;display list address
 
  
-    icl "obraz2.asm"
+    icl "obraz.asm"
 
 
 .macro asr16 addr
