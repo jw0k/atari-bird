@@ -77,11 +77,11 @@ codestart
     mwa	#antic_dl SDLSTL
     
     mva #>CHARSET0 CHBAS
-    mva #$0E COLOR0 ;OK
-    mva #$B8 COLOR1 ;OK
-    mva #$98 COLOR2 ;OK
-    mva #$B4 COLOR3 ;OK
-    mva #$00 COLOR4
+    mva #$0E COLOR0 ;chmury, bardzo jasna rura;   01
+    mva #$B8 COLOR1 ;trawa, okna, jasna rura;     10
+    mva #$98 COLOR2 ;niebo, budynki;              11
+    mva #$B4 COLOR3 ;ciemna trawa, rura;          11 (+high bit ustawiony w screen data)
+    mva #$00 COLOR4 ;tlo, ciemna rura;            00
     
     mwa #DLI VDSLST
     mva #$C0 NMIEN ;enable dli (and keep vbi enabled)
@@ -109,13 +109,13 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                 lda STICK0
                 and #$08
                 bne @+
-                inc COLOR2
+                inc COLOR3
 
                 ;left
 @               lda STICK0
                 and #$04
                 bne @+
-                dec COLOR2
+                dec COLOR3
                 
 
 @               jmp XITVBV ;end vbi

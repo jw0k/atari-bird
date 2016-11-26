@@ -1,3 +1,4 @@
+;todo; odstepy moga byc $0300, a nie $0400
 ;todo: generate sky (all FFs in the beginning) in runtime instead of storing it
 ;todo: generate screen data backup instead of storing it
 
