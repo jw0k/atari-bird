@@ -2,6 +2,8 @@ PROGSTART = $2000
 ANTICDLSTART = $9000
 SCREENSTART = $9081 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
 CHARSET0 = $6000
+PIPES = $8D00
+
 CHBAS = $02F4
 CHBASE = $D409
 
@@ -134,10 +136,22 @@ DLI         pha
             sta WSYNC
             sta CHBASE
             pla
-            rti
-            
+            rti            
 currCharset dta >CHARSET0
 
+;=============================================================
+;------------- draw background -------------------------------
+;=============================================================
+drawBackground  nop
+                rti
+
+;=============================================================
+;------------- draw pipe at pipeX, pipeBlocks ----------------
+;=============================================================
+drawPipe    nop
+            rti
+pipeX       dta 0
+pipeBlocks  dta 0
                 
     run codestart
 
@@ -163,7 +177,8 @@ antic_dl ;mode2 = 40x24 characters (960 bytes) for normal width, 48x24 character
     dta a(antic_dl) ;display list address
 
  
-    icl "obraz.asm"
+    icl "background.asm"
+    icl "pipes.asm"
 
 
 .macro asr16 addr
