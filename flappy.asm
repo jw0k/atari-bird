@@ -1,8 +1,9 @@
 PROGSTART = $2000
-ANTICDLSTART = $9000
-SCREENSTART = $9081 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
-CHARSET0 = $6000
-PIPES = $8D00
+ANTICDLSTART = $A000
+SCREENSTART = $A040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
+CHARSET = $6000; $6000-$8A80 (but reserve it to $8C00)
+BKCHARSET = $8C00; $8C00-$9C00 - backup charset (copy of charsets #7-#10)
+PIPES = $9C00 ; $9C00-9F20
 
 CHBAS = $02F4
 CHBASE = $D409
@@ -58,6 +59,10 @@ MODUL = $4000
 
 codestart
 
+    jsr copyCharsets
+    jsr generateSky
+    jsr generateScreenData
+
     ldx #<MODUL
 	ldy #>MODUL
 	lda #0 ;starting song line
@@ -75,19 +80,106 @@ codestart
 
     ;set new address of antic's display list
     mwa	#antic_dl SDLSTL
-    
-    mva #>CHARSET0 CHBAS
+
+    mva #>CHARSET CHBAS
     mva #$0E COLOR0 ;chmury, bardzo jasna rura;   01
     mva #$B8 COLOR1 ;trawa, okna, jasna rura;     10
     mva #$98 COLOR2 ;niebo, budynki;              11
     mva #$B4 COLOR3 ;ciemna trawa, rura;          11 (+high bit ustawiony w screen data)
     mva #$00 COLOR4 ;tlo, ciemna rura;            00
-    
+
     mwa #DLI VDSLST
     mva #$C0 NMIEN ;enable dli (and keep vbi enabled)
 
 loop
     jmp loop
+
+;=============================================================
+;---------------- make charsets backup -----------------------
+;=============================================================
+copyCharsets
+                ;copy 4kB from endOfSky to BKCHARSET
+                pha
+                txa
+                pha
+
+                ldx #$00
+                .rept 16, (#*256)
+@               lda endOfSky+:1, x
+                sta BKCHARSET+:1, x
+                inx
+                bne @-
+                .endr
+
+                pla
+                tax
+                pla
+                rts
+
+;=============================================================
+;---------------- generate sky -------------------------------
+;=============================================================
+generateSky
+                pha
+                txa
+                pha
+
+                lda #$FF
+                ldx #$00
+
+                ;fill 7 charsets (1kB each)
+                .rept 28, (#*256)
+@               sta CHARSET+:1, x
+                inx
+                bne @-
+                .endr
+
+                pla
+                tax
+                pla
+                rts
+
+;=============================================================
+;---------------- generate screen data -----------------------
+;=============================================================
+generateScreenData
+                pha
+                txa
+                pha
+
+                .rept 10, (#*80)
+                lda #$00 ;$00-$4F
+                ldx #$00 ;$00-$4F
+@               sta SCREENSTART+:1, x
+                clc
+                adc #1
+                inx
+                cpx #80
+                bne @-
+                .endr
+
+                lda #$80
+                ldx #$00
+@               sta SCREENSTART+800, x
+                clc
+                adc #1
+                inx
+                cpx #40
+                bne @-
+
+                lda #40
+                ldx #$00
+@               sta SCREENSTART+840, x
+                clc
+                adc #1
+                inx
+                cpx #40
+                bne @-
+
+                pla
+                tax
+                pla
+                rts
 
 ;=============================================================
 ;---------------- VBLANK routine -----------------------------
@@ -104,7 +196,7 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                  9  | 5
                     |
                    13*/
-                   
+
                 ;right
                 lda STICK0
                 and #$08
@@ -116,7 +208,7 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                 and #$04
                 bne @+
                 dec COLOR3
-                
+
 
 @               jmp XITVBV ;end vbi
 
@@ -125,34 +217,34 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
 ;---------------- DLI routine --------------------------------
 ;=============================================================
 DLI         pha
-            
+
             lda currCharset
             clc
             adc #4
-            cmp #(>CHARSET0+$2C)
+            cmp #(>CHARSET+$2C)
             bne @+
-            lda #>CHARSET0
+            lda #>CHARSET
 @           sta currCharset
             sta WSYNC
             sta CHBASE
             pla
-            rti            
-currCharset dta >CHARSET0
+            rti
+currCharset dta >CHARSET
 
 ;=============================================================
 ;------------- draw background -------------------------------
 ;=============================================================
 drawBackground  nop
-                rti
+                rts
 
 ;=============================================================
 ;------------- draw pipe at pipeX, pipeBlocks ----------------
 ;=============================================================
 drawPipe    nop
-            rti
+            rts
 pipeX       dta 0
 pipeBlocks  dta 0
-                
+
     run codestart
 
 codeend = *
@@ -165,18 +257,18 @@ antic_dl ;mode2 = 40x24 characters (960 bytes) for normal width, 48x24 character
     dta $44
     dta a(SCREENSTART)
     dta $84
-    
+
     .rept 10
     dta $04
     dta $84
     .endr
-    
+
     dta $70,$70
 
     dta $41 ;jump and wait for vblank
     dta a(antic_dl) ;display list address
 
- 
+
     icl "background.asm"
     icl "pipes.asm"
 

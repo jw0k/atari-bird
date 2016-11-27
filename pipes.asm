@@ -1,5 +1,7 @@
 ;TODO: generate shifted values using cpu instead of pre-calculating
 
+;now it is 800 bytes ($0320)
+
     org PIPES
 
 pipe            dta $C6,$C6,$C6,$C6,$C6,$C6,$C6,$C6
