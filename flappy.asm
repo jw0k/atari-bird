@@ -63,6 +63,9 @@ codestart
     jsr generateSky
     jsr generateScreenData
 
+    mva #128 pipeX
+    jsr drawPipe
+
     ldx #<MODUL
 	ldy #>MODUL
 	lda #0 ;starting song line
@@ -201,13 +204,15 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                 lda STICK0
                 and #$08
                 bne @+
-                inc COLOR3
+                adb pipeX #$01
+                jsr drawPipe
 
                 ;left
 @               lda STICK0
                 and #$04
                 bne @+
-                dec COLOR3
+                sbb pipeX #$01
+                jsr drawPipe
 
 
 @               jmp XITVBV ;end vbi
@@ -240,10 +245,84 @@ drawBackground  nop
 ;=============================================================
 ;------------- draw pipe at pipeX, pipeBlocks ----------------
 ;=============================================================
-drawPipe    nop
+drawPipe    pha
+            txa
+            pha
+
+            .rept 5,#,(#*8)
+            lda pipeX
+            and #$FC ;zero 2 least significant bits
+            asl
+            ldx #0
+            stx 1+(@+1)
+            bcc @+
+            clc
+            ldx #1
+            stx 1+(@+1)
+@           adc #<(CHARSET+:2)
+            sta ldByte:1+1
+            sta stByte:1+1
+            lda #>(CHARSET+:2)
+@           adc #0
+            sta ldByte:1+2
+            sta stByte:1+2
+
+            lda pipeX
+            and #$03
+            tax
+            lda pipeOffsets, x
+            clc
+            adc #<(PIPES+:2)
+            sta ldPipes:1+1
+            lda #>(PIPES+:2)
+            adc #0
+            sta ldPipes:1+2
+
+            lda pipeX
+            and #$03
+            tax
+            lda maskOffsets, x
+            clc
+            adc #<(pipeMask+:1)
+            sta andMask:1+1
+            lda #>(pipeMask+:1)
+            adc #0
+            sta andMask:1+2
+            .endr
+
+            ldx #$00
+
+            .rept 5,#
+andMask:1   lda $FFFF ;placeholder
+            sta mask
+            eor #$FF
+            sta invertedMask
+ldByte:1    lda $FFFF, x ;placeholder
+            and mask
+            sta backgroundByte
+ldPipes:1   lda $FFFF, x ;placeholder
+            and invertedMask
+            ora backgroundByte
+stByte:1    sta $FFFF, x ;placeholder
+            .endr
+
+            inx
+            cpx #$08
+            beq @+
+            jmp andMask0
+
+@           pla
+            tax
+            pla
             rts
-pipeX       dta 0
-pipeBlocks  dta 0
+
+pipeX           dta 0
+pipeBlocks      dta 0
+backgroundByte  dta 0
+mask            dta 0
+invertedMask    dta 0
+pipeOffsets     dta 0, 40, 80, 120
+maskOffsets     dta 0, 5, 10, 15
 
     run codestart
 

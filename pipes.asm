@@ -128,3 +128,9 @@ pipeDownMid3    dta $00,$00,$00,$00,$03,$03,$03,$03
                 dta $FF,$FF,$FF,$00,$00,$BF,$BF,$BF
                 dta $FC,$FC,$FC,$00,$00,$FC,$FC,$FC
                 dta $00,$00,$00,$00,$00,$0C,$0C,$0C
+
+
+pipeMask        dta $C0,$00,$00,$03,$FF
+                dta $F0,$00,$00,$00,$FF
+                dta $FC,$00,$00,$00,$3F
+                dta $FF,$00,$00,$00,$0F
