@@ -187,7 +187,7 @@ generateScreenData
 ;=============================================================
 ;---------------- VBLANK routine -----------------------------
 ;=============================================================
-VBI             jsr RASTERMUSICTRACKER+3 ;play
+VBI             ;jsr RASTERMUSICTRACKER+3 ;play
 
                /*Decimal
                    14
@@ -243,26 +243,44 @@ drawBackground  nop
                 rts
 
 ;=============================================================
-;------------- draw pipe at pipeX, pipeBlocks ----------------
+;------------- draw pipe segment -----------------------------
 ;=============================================================
-drawPipe    pha
+drawSegment pha
             txa
             pha
+            tya
+            pha
+
+loopStart
+            asl startingModeLine
+            ldy startingModeLine
+            lsr startingModeLine
+            inc startingModeLine
 
             .rept 5,#,(#*8)
+            lda charsetOffsets, y
+            clc
+            adc #<(CHARSET+:2)
+            sta lChByte:1+1
+            iny
+            lda charsetOffsets, y
+            dey
+            adc #>(CHARSET+:2)
+            sta hChByte:1+1
+
             lda pipeX
             and #$FC ;zero 2 least significant bits
             asl
             ldx #0
-            stx 1+(@+1)
-            bcc @+
+            stx 1+(@+0)
+            bcc lChByte:1
             clc
             ldx #1
-            stx 1+(@+1)
-@           adc #<(CHARSET+:2)
+            stx 1+(@+0)
+lChByte:1   adc #$FF ;placeholder         #<(CHARSET+:2)
             sta ldByte:1+1
             sta stByte:1+1
-            lda #>(CHARSET+:2)
+hChByte:1   lda #$FF ;placeholder         #>(CHARSET+:2)
 @           adc #0
             sta ldByte:1+2
             sta stByte:1+2
@@ -278,9 +296,6 @@ drawPipe    pha
             adc #0
             sta ldPipes:1+2
 
-            lda pipeX
-            and #$03
-            tax
             lda maskOffsets, x
             clc
             adc #<(pipeMask+:1)
@@ -311,6 +326,41 @@ stByte:1    sta $FFFF, x ;placeholder
             beq @+
             jmp andMask0
 
+
+@           lda endingModeLine
+            cmp startingModeLine
+            bmi @+
+            jmp loopStart
+
+
+@           pla
+            tay
+            pla
+            tax
+            pla
+            rts
+
+startingModeLine    dta 0
+endingModeLine      dta 0
+backgroundByte      dta 0
+mask                dta 0
+invertedMask        dta 0
+pipeOffsets         dta 0, 40, 80, 120
+maskOffsets         dta 0, 5, 10, 15
+charsetOffsets      dta a($0000, $0140, $0400, $0540, $0800, $0940, $0C00, $0D40, $1000, $1140, $1400, \
+                          $1540, $1800, $1940, $1C00, $1D40, $2000, $2140, $2400, $2540, $2800, $2940)
+
+;=============================================================
+;------------- draw pipe at pipeX, pipeBlocks ----------------
+;=============================================================
+drawPipe    pha
+            txa
+            pha
+
+            mva #0 startingModeLine
+            mva #20 endingModeLine
+            jsr drawSegment
+
 @           pla
             tax
             pla
@@ -318,11 +368,6 @@ stByte:1    sta $FFFF, x ;placeholder
 
 pipeX           dta 0
 pipeBlocks      dta 0
-backgroundByte  dta 0
-mask            dta 0
-invertedMask    dta 0
-pipeOffsets     dta 0, 40, 80, 120
-maskOffsets     dta 0, 5, 10, 15
 
     run codestart
 
