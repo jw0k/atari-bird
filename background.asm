@@ -1,8 +1,9 @@
 ;important: every charset first page must be divisible by 2. (e.g. $6000, $6200, $8400, etc.)
 
-;ORG CHARSET here: 15 mode lines, all $FFs
+;ORG CHARSET here: 15 mode lines, (sky: $FF, grass: $AA)
     ORG CHARSET
     dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
 
 ;charset #15
     ORG CHARSET + $0400
@@ -231,8 +232,3 @@
 
 ;ORG CHARSET + $4400 (charset #20a)
 ;ORG CHARSET + $4800 (charset #20b)
-
-
-;ORG CHARSET + $4C00 here: 1 mode line, all $AAs
-    ORG CHARSET + $4C00
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA

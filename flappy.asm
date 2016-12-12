@@ -1,7 +1,7 @@
 PROGSTART = $2000
 ANTICDLSTART = $A000
 SCREENSTART = $A040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
-CHARSET = $5000; $5000-$9FFF
+CHARSET = $5000; $5000-$9BFF
 ;PIPES = $9C00 ; $9C00-9F20
 
 CHBAS = $02F4
@@ -108,17 +108,18 @@ generateScreenData
                 pha
 
                 ;fill 15 mode lines (15*32 = 480 characters)
-                ;480 = 255 + 225
+                ;480 = 256 + 224
 
                 lda #0
-                ldx #255
+                ldx #0
 @               sta SCREENSTART, x
-                dex
+                inx
                 bne @-
 
-                ldx #225
+                ldx #0
 @               sta SCREENSTART+256, x
-                dex
+                inx
+                cpx #224
                 bne @-
 
                 .rept 5, (#*32)
@@ -141,11 +142,11 @@ generateScreenData
                 cpx #32
                 bne @-
 
-                lda #0
-                ldx #32
+                lda #1
+                ldx #31
 @               sta SCREENSTART+672, x
                 dex
-                bne @-
+                bpl @-
 
                 pla
                 tax
@@ -207,7 +208,7 @@ DLI             pha
                 rti
 
 currentCharset  dta $0
-charsetAddrs    dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET+$4C
+charsetAddrs    dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET
 
 ;=============================================================
 ;------------- draw background -------------------------------
