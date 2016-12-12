@@ -1,50 +1,11 @@
 ;important: every charset first page must be divisible by 2. (e.g. $6000, $6200, $8400, etc.)
 
-;charsets 0-6 - only $FFs, generated at startup
+;ORG CHARSET here: 15 mode lines, all $FFs
+    ORG CHARSET
+    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-;charset #7
-    ORG CHARSET + $1C00
-endOfSky
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+;charset #15
+    ORG CHARSET + $0400
     dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FD
     dta $FF,$FF,$FF,$FF,$FF,$FF,$57,$55
     dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -77,16 +38,12 @@ endOfSky
     dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
     dta $FF,$FF,$FF,$FF,$FF,$FF,$F5,$55
     dta $FF,$FF,$FF,$FF,$FF,$FF,$7F,$57
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FD,$FD
-    dta $FF,$FF,$FF,$FF,$D5,$55,$55,$55
-    dta $FF,$FF,$FF,$FF,$7F,$5F,$57,$55
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    dta $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-;charset #8
-    ORG CHARSET + $2000
+
+;ORG CHARSET + $0800 (charset #15a)
+;ORG CHARSET + $0C00 (charset #15b)
+
+;charset #16
+    ORG CHARSET + $1000
     dta $F5,$D5,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
     dta $7F,$5F,$57,$57,$55,$55,$55,$55
@@ -119,14 +76,12 @@ endOfSky
     dta $FD,$7D,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $F5,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $F5,$D5,$55,$55,$55,$55,$55,$55
-    dta $5F,$57,$55,$55,$55,$55,$55,$55
-    dta $FF,$FF,$FF,$FF,$7D,$75,$55,$55
-    dta $FF,$D5,$55,$55,$55,$55,$55,$55
-    dta $FF,$7F,$5F,$5F,$57,$55,$55,$55
+
+;ORG CHARSET + $1400 (charset #16a)
+;ORG CHARSET + $1800 (charset #16b)
+
+;charset #17
+    ORG CHARSET + $1C00
     dta $55,$55,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
@@ -159,16 +114,12 @@ endOfSky
     dta $55,$55,$55,$55,$55,$F5,$75,$75
     dta $55,$55,$55,$55,$55,$55,$55,$55
     dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$57,$57,$FF
-    dta $55,$55,$55,$55,$55,$F5,$75,$75
-    dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$55,$55,$55
-    dta $55,$55,$55,$55,$55,$55,$55,$57
-    dta $55,$55,$55,$55,$55,$5F,$5D,$FD
-    dta $55,$55,$55,$55,$55,$D5,$D5,$D5
-;charset #9
-    ORG CHARSET + $2400
+
+;ORG CHARSET + $2000 (charset #17a)
+;ORG CHARSET + $2400 (charset #17b)
+
+;charset #18
+    ORG CHARSET + $2800
     dta $55,$F5,$75,$FF,$55,$99,$99,$55
     dta $55,$55,$55,$D5,$D5,$D5,$D5,$D5
     dta $55,$57,$57,$57,$7F,$75,$76,$76
@@ -201,14 +152,12 @@ endOfSky
     dta $75,$BF,$B7,$7F,$B6,$B6,$75,$B6
     dta $55,$55,$55,$F5,$75,$75,$75,$75
     dta $55,$55,$55,$55,$5F,$5D,$5D,$5D
-    dta $55,$FF,$D7,$D7,$FF,$57,$9B,$9B
-    dta $D5,$D9,$D9,$D5,$D9,$D9,$D5,$D9
-    dta $75,$BF,$B7,$7F,$B6,$B6,$75,$B6
-    dta $55,$55,$55,$F5,$75,$75,$75,$75
-    dta $55,$57,$57,$57,$7F,$75,$76,$76
-    dta $57,$FF,$5F,$5F,$FF,$5F,$6F,$6F
-    dta $55,$66,$66,$55,$66,$66,$55,$66
-    dta $D5,$FD,$DD,$FF,$D9,$D9,$D5,$D9
+
+;ORG CHARSET + $2C00 (charset #18a)
+;ORG CHARSET + $3000 (charset #18b)
+
+;charset #19
+    ORG CHARSET + $3400
     dta $99,$99,$55,$99,$99,$55,$99,$99
     dta $D5,$D5,$D5,$D5,$D5,$D5,$DA,$EA
     dta $75,$76,$76,$75,$76,$76,$75,$B5
@@ -241,16 +190,12 @@ endOfSky
     dta $B6,$75,$B6,$B6,$75,$B6,$B6,$75
     dta $75,$75,$75,$75,$75,$75,$76,$7A
     dta $5D,$5D,$5D,$5D,$5D,$5D,$9D,$AD
-    dta $57,$BF,$B5,$75,$B5,$B5,$75,$BE
-    dta $D9,$D5,$D9,$D9,$D5,$D9,$A5,$A9
-    dta $B6,$75,$B6,$B6,$75,$B6,$6A,$AA
-    dta $75,$75,$75,$75,$75,$75,$75,$B5
-    dta $75,$76,$76,$75,$76,$76,$7A,$6A
-    dta $5F,$FF,$F7,$F7,$F7,$FB,$FA,$AA
-    dta $66,$55,$66,$66,$55,$66,$56,$A5
-    dta $D9,$D5,$D9,$D9,$D5,$D9,$D6,$DA
-;charset #10
-    ORG CHARSET + $2800
+
+;ORG CHARSET + $3800 (charset #19a)
+;ORG CHARSET + $3C00 (charset #19b)
+
+;charset #20
+    ORG CHARSET + $4000
     dta $57,$F6,$AE,$AB,$AA,$AB,$AB,$AA
     dta $EA,$AA,$AA,$EF,$FA,$EA,$AA,$AA
     dta $B7,$BE,$BA,$EA,$EA,$BA,$AE,$AE
@@ -283,51 +228,11 @@ endOfSky
     dta $75,$EF,$AA,$AA,$AA,$AA,$AA,$AA
     dta $7A,$EA,$EA,$BB,$AE,$BA,$EA,$EA
     dta $AE,$AB,$AF,$EA,$BA,$AE,$AF,$AB
-    dta $7E,$EB,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AB,$AA,$EA,$BB,$AF,$BA,$BA,$AA
-    dta $AA,$EF,$EA,$FA,$AE,$AB,$AB,$AB
-    dta $B7,$EE,$BA,$EA,$EA,$AA,$AA,$AA
-    dta $EA,$BA,$AF,$AB,$AB,$AA,$AA,$AA
-    dta $BA,$AE,$AE,$AF,$BA,$EA,$EA,$EA
-    dta $AD,$BF,$EE,$EA,$FA,$AE,$AE,$AA
-    dta $FA,$AE,$AB,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-    dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
+
+;ORG CHARSET + $4400 (charset #20a)
+;ORG CHARSET + $4800 (charset #20b)
+
+
+;ORG CHARSET + $4C00 here: 1 mode line, all $AAs
+    ORG CHARSET + $4C00
     dta $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA

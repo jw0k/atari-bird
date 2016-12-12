@@ -1,15 +1,17 @@
 PROGSTART = $2000
 ANTICDLSTART = $A000
 SCREENSTART = $A040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
-CHARSET = $6000; $6000-$8A80 (but reserve it to $8C00)
-BKCHARSET = $8C00; $8C00-$9C00 - backup charset (copy of charsets #7-#10)
-PIPES = $9C00 ; $9C00-9F20
+CHARSET = $5000; $5000-$9FFF
+;PIPES = $9C00 ; $9C00-9F20
 
 CHBAS = $02F4
 CHBASE = $D409
 
 NMIEN = $D40E
 VDSLST = $0200
+
+DMACTL = $D400
+SDMCTL = $022F
 
 COLOR4 = $2C8 ;COLBK = $D01A
 COLOR0 = $2C4 ;COLPF0 = $D016
@@ -59,12 +61,10 @@ MODUL = $4000
 
 codestart
 
-    jsr copyCharsets
-    jsr generateSky
     jsr generateScreenData
 
-    mva #128 pipeX
-    jsr drawPipe
+    // mva #40 pipeX
+    // jsr drawPipe
 
     ldx #<MODUL
 	ldy #>MODUL
@@ -75,6 +75,8 @@ codestart
     lda RTCLOK3
     cmp RTCLOK3
     beq *-2 ;jump 2 bytes backwards (to the first byte of cmp instruction)
+
+    mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
 
     ldy #<VBI
 	ldx #>VBI
@@ -98,51 +100,6 @@ loop
     jmp loop
 
 ;=============================================================
-;---------------- make charsets backup -----------------------
-;=============================================================
-copyCharsets
-                ;copy 4kB from endOfSky to BKCHARSET
-                pha
-                txa
-                pha
-
-                ldx #$00
-                .rept 16, (#*256)
-@               lda endOfSky+:1, x
-                sta BKCHARSET+:1, x
-                inx
-                bne @-
-                .endr
-
-                pla
-                tax
-                pla
-                rts
-
-;=============================================================
-;---------------- generate sky -------------------------------
-;=============================================================
-generateSky
-                pha
-                txa
-                pha
-
-                lda #$FF
-                ldx #$00
-
-                ;fill 7 charsets (1kB each)
-                .rept 28, (#*256)
-@               sta CHARSET+:1, x
-                inx
-                bne @-
-                .endr
-
-                pla
-                tax
-                pla
-                rts
-
-;=============================================================
 ;---------------- generate screen data -----------------------
 ;=============================================================
 generateScreenData
@@ -150,33 +107,44 @@ generateScreenData
                 txa
                 pha
 
-                .rept 10, (#*80)
-                lda #$00 ;$00-$4F
-                ldx #$00 ;$00-$4F
-@               sta SCREENSTART+:1, x
+                ;fill 15 mode lines (15*32 = 480 characters)
+                ;480 = 255 + 225
+
+                lda #0
+                ldx #255
+@               sta SCREENSTART, x
+                dex
+                bne @-
+
+                ldx #225
+@               sta SCREENSTART+256, x
+                dex
+                bne @-
+
+                .rept 5, (#*32)
+                lda #0
+                ldx #0
+@               sta SCREENSTART+480+:1, x
                 clc
                 adc #1
                 inx
-                cpx #80
+                cpx #32
                 bne @-
                 .endr
 
                 lda #$80
-                ldx #$00
-@               sta SCREENSTART+800, x
+                ldx #0
+@               sta SCREENSTART+640, x
                 clc
                 adc #1
                 inx
-                cpx #40
+                cpx #32
                 bne @-
 
-                lda #40
-                ldx #$00
-@               sta SCREENSTART+840, x
-                clc
-                adc #1
-                inx
-                cpx #40
+                lda #0
+                ldx #32
+@               sta SCREENSTART+672, x
+                dex
                 bne @-
 
                 pla
@@ -187,7 +155,7 @@ generateScreenData
 ;=============================================================
 ;---------------- VBLANK routine -----------------------------
 ;=============================================================
-VBI             ;jsr RASTERMUSICTRACKER+3 ;play
+VBI             jsr RASTERMUSICTRACKER+3 ;play
 
                /*Decimal
                    14
@@ -201,19 +169,20 @@ VBI             ;jsr RASTERMUSICTRACKER+3 ;play
                    13*/
 
                 ;right
-                lda STICK0
-                and #$08
-                bne @+
-                adb pipeX #$01
-                jsr drawPipe
+                ;lda STICK0
+                ;and #$08
+                ;bne @+
+                ;adb pipeX #$01
+                // jsr drawPipe
 
                 ;left
-@               lda STICK0
-                and #$04
-                bne @+
-                sbb pipeX #$01
-                jsr drawPipe
+@               ;lda STICK0
+                ;and #$04
+                ;bne @+
+                ;sbb pipeX #$01
+                // jsr drawPipe
 
+                mva #0 currentCharset
 
 @               jmp XITVBV ;end vbi
 
@@ -221,20 +190,24 @@ VBI             ;jsr RASTERMUSICTRACKER+3 ;play
 ;=============================================================
 ;---------------- DLI routine --------------------------------
 ;=============================================================
-DLI         pha
+DLI             pha
+                txa
+                pha
 
-            lda currCharset
-            clc
-            adc #4
-            cmp #(>CHARSET+$2C)
-            bne @+
-            lda #>CHARSET
-@           sta currCharset
-            sta WSYNC
-            sta CHBASE
-            pla
-            rti
-currCharset dta >CHARSET
+                ldx currentCharset
+                lda charsetAddrs,x
+                inx
+                stx currentCharset
+                sta WSYNC
+                sta CHBASE
+
+                pla
+                tax
+                pla
+                rti
+
+currentCharset  dta $0
+charsetAddrs    dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET+$4C
 
 ;=============================================================
 ;------------- draw background -------------------------------
@@ -242,150 +215,27 @@ currCharset dta >CHARSET
 drawBackground  nop
                 rts
 
-;=============================================================
-;------------- draw pipe segment -----------------------------
-;=============================================================
-drawSegment pha
-            txa
-            pha
-            tya
-            pha
-
-loopStart
-            asl startingModeLine
-            ldy startingModeLine
-            lsr startingModeLine
-            inc startingModeLine
-
-            .rept 5,#,(#*8)
-            lda charsetOffsets, y
-            clc
-            adc #<(CHARSET+:2)
-            sta lChByte:1+1
-            iny
-            lda charsetOffsets, y
-            dey
-            adc #>(CHARSET+:2)
-            sta hChByte:1+1
-
-            lda pipeX
-            and #$FC ;zero 2 least significant bits
-            asl
-            ldx #0
-            stx 1+(@+0)
-            bcc lChByte:1
-            clc
-            ldx #1
-            stx 1+(@+0)
-lChByte:1   adc #$FF ;placeholder         #<(CHARSET+:2)
-            sta ldByte:1+1
-            sta stByte:1+1
-hChByte:1   lda #$FF ;placeholder         #>(CHARSET+:2)
-@           adc #0
-            sta ldByte:1+2
-            sta stByte:1+2
-
-            lda pipeX
-            and #$03
-            tax
-            lda pipeOffsets, x
-            clc
-            adc #<(PIPES+:2)
-            sta ldPipes:1+1
-            lda #>(PIPES+:2)
-            adc #0
-            sta ldPipes:1+2
-
-            lda maskOffsets, x
-            clc
-            adc #<(pipeMask+:1)
-            sta andMask:1+1
-            lda #>(pipeMask+:1)
-            adc #0
-            sta andMask:1+2
-            .endr
-
-            ldx #$00
-
-            .rept 5,#
-andMask:1   lda $FFFF ;placeholder
-            sta mask
-            eor #$FF
-            sta invertedMask
-ldByte:1    lda $FFFF, x ;placeholder
-            and mask
-            sta backgroundByte
-ldPipes:1   lda $FFFF, x ;placeholder
-            and invertedMask
-            ora backgroundByte
-stByte:1    sta $FFFF, x ;placeholder
-            .endr
-
-            inx
-            cpx #$08
-            beq @+
-            jmp andMask0
-
-
-@           lda endingModeLine
-            cmp startingModeLine
-            bmi @+
-            jmp loopStart
-
-
-@           pla
-            tay
-            pla
-            tax
-            pla
-            rts
-
-startingModeLine    dta 0
-endingModeLine      dta 0
-backgroundByte      dta 0
-mask                dta 0
-invertedMask        dta 0
-pipeOffsets         dta 0, 40, 80, 120
-maskOffsets         dta 0, 5, 10, 15
-charsetOffsets      dta a($0000, $0140, $0400, $0540, $0800, $0940, $0C00, $0D40, $1000, $1140, $1400, \
-                          $1540, $1800, $1940, $1C00, $1D40, $2000, $2140, $2400, $2540, $2800, $2940)
-
-;=============================================================
-;------------- draw pipe at pipeX, pipeBlocks ----------------
-;=============================================================
-drawPipe    pha
-            txa
-            pha
-
-            mva #0 startingModeLine
-            mva #20 endingModeLine
-            jsr drawSegment
-
-@           pla
-            tax
-            pla
-            rts
-
-pipeX           dta 0
-pipeBlocks      dta 0
-
     run codestart
 
 codeend = *
 
     org ANTICDLSTART
     ;antic has 10 bit program counter (it's best when antic's dl starts on 1k boundary)
-antic_dl ;mode2 = 40x24 characters (960 bytes) for normal width, 48x24 characters (1152 bytes for wide width or hscrol enabled)
+antic_dl
     dta $70,$70,$70 ;generate 24 blank lines (8 blank lines times 3)
 
     dta $44
     dta a(SCREENSTART)
-    dta $84
 
-    .rept 10
+    .rept 13
     dta $04
+    .endr
+
+    .rept 7
     dta $84
     .endr
+
+    dta $04
 
     dta $70,$70
 
@@ -394,7 +244,7 @@ antic_dl ;mode2 = 40x24 characters (960 bytes) for normal width, 48x24 character
 
 
     icl "background.asm"
-    icl "pipes.asm"
+    ;icl "pipes.asm"
 
 
 .macro asr16 addr
