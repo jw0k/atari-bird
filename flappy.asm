@@ -285,9 +285,323 @@ generateScreenData
                 rts
 
 ;=============================================================
+;---------------- undraw pipe  -------------------------------
+;=============================================================
+undrawPipe
+                pha
+
+                pla
+                rts
+
+;=============================================================
+;---------------- draw pipe  ---------------------------------
+;=============================================================
+drawPipe
+                pha
+                txa
+                pha
+                tya
+                pha
+
+                lda row
+                cmp #15
+                bmi rows0to14
+                cmp #20
+                jmi rows15to19
+                jeq row20
+
+row21:          ldx pipeX
+                ldy pipeXOffset
+
+                cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #57
+                sta SCREENSTART + 32*21 + 0,x
+                lda #58+128
+                sta SCREENSTART + 32*21 + 1,x
+                lda #59+128
+                sta SCREENSTART + 32*21 + 2,x
+                lda #60
+                sta SCREENSTART + 32*21 + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==1
+                lda #69
+                sta SCREENSTART + 32*21 + 0,x
+                lda #70+128
+                sta SCREENSTART + 32*21 + 1,x
+                lda #71+128
+                sta SCREENSTART + 32*21 + 2,x
+                lda #72+128
+                sta SCREENSTART + 32*21 + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==2
+                lda #83
+                sta SCREENSTART + 32*21 + 0,x
+                lda #84+128
+                sta SCREENSTART + 32*21 + 1,x
+                lda #85+128
+                sta SCREENSTART + 32*21 + 2,x
+                lda #86+128
+                sta SCREENSTART + 32*21 + 3,x
+                lda #87
+                sta SCREENSTART + 32*21 + 4,x
+                jmp drawPipeEnd
+
+@               ;offset==3
+                lda #98
+                sta SCREENSTART + 32*21 + 1,x
+                lda #99+128
+                sta SCREENSTART + 32*21 + 2,x
+                lda #100+128
+                sta SCREENSTART + 32*21 + 3,x
+                lda #101
+                sta SCREENSTART + 32*21 + 4,x
+                jmp drawPipeEnd
+
+rows0to14:      ;w A jest row
+                ;calcScreenAddr = SCREENSTART + row*32 + pipeX
+
+                asl
+                tax
+                lda drawRowAddrs,x
+                sta rowJmp+1
+                lda drawRowAddrs+1,x
+                sta rowJmp+2
+
+                ldx pipeX
+                ldy pipeXOffset
+rowJmp          jmp $FFFF
+
+                .rept 15,#
+drawRow:1       cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #2
+                sta SCREENSTART + 32*# + 0,x
+                lda #3+128
+                sta SCREENSTART + 32*# + 1,x
+                lda #4+128
+                sta SCREENSTART + 32*# + 2,x
+                lda #5
+                sta SCREENSTART + 32*# + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==1
+                lda #14
+                sta SCREENSTART + 32*# + 0,x
+                lda #15+128
+                sta SCREENSTART + 32*# + 1,x
+                lda #16+128
+                sta SCREENSTART + 32*# + 2,x
+                lda #17+128
+                sta SCREENSTART + 32*# + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==2
+                lda #28
+                sta SCREENSTART + 32*# + 0,x
+                lda #29+128
+                sta SCREENSTART + 32*# + 1,x
+                lda #30+128
+                sta SCREENSTART + 32*# + 2,x
+                lda #31+128
+                sta SCREENSTART + 32*# + 3,x
+                lda #32
+                sta SCREENSTART + 32*# + 4,x
+                jmp drawPipeEnd
+
+@               ;offset==3
+                lda #43
+                sta SCREENSTART + 32*# + 1,x
+                lda #44+128
+                sta SCREENSTART + 32*# + 2,x
+                lda #45+128
+                sta SCREENSTART + 32*# + 3,x
+                lda #46
+                sta SCREENSTART + 32*# + 4,x
+                jmp drawPipeEnd
+
+                .endr
+
+                ;offset0 - 2,3,4,5
+                ;offset1 - 14,15,16,17
+                ;offset2 - 28,29,30,31,32
+                ;offset3 - 43,44,45,46
+
+                jmp drawPipeEnd
+
+rows15to19:
+                sec
+                sbc #15
+                asl
+                tax
+                lda drawRowBAddrs,x
+                sta rowBJmp+1
+                lda drawRowBAddrs+1,x
+                sta rowBJmp+2
+
+                ldx pipeX
+                ldy pipeXOffset
+rowBJmp         jmp $FFFF
+
+                .rept 5,#
+drawRowB:1      cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda add32,x
+                sta SCREENSTART + 32*(15+#) + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*(15+#) + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*(15+#) + 2,x
+                lda add64+3,x
+                sta SCREENSTART + 32*(15+#) + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==1
+                lda add32,x
+                sta SCREENSTART + 32*(15+#) + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*(15+#) + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*(15+#) + 2,x
+                lda #98+128
+                sta SCREENSTART + 32*(15+#) + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==2
+                lda add32,x
+                sta SCREENSTART + 32*(15+#) + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*(15+#) + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*(15+#) + 2,x
+                lda #98+128
+                sta SCREENSTART + 32*(15+#) + 3,x
+                lda add64+4,x
+                sta SCREENSTART + 32*(15+#) + 4,x
+                jmp drawPipeEnd
+
+@               ;offset==3
+                lda #99+128
+                sta SCREENSTART + 32*(15+#) + 1,x
+                lda #100+128
+                sta SCREENSTART + 32*(15+#) + 2,x
+                lda #101+128
+                sta SCREENSTART + 32*(15+#) + 3,x
+                lda add64+4,x
+                sta SCREENSTART + 32*(15+#) + 4,x
+                jmp drawPipeEnd
+                .endr
+
+row20:
+                ldx pipeX
+                ldy pipeXOffset
+
+                cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda add160,x
+                sta SCREENSTART + 32*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*20 + 2,x
+                lda add192+3,x
+                sta SCREENSTART + 32*20 + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==1
+                lda add160,x
+                sta SCREENSTART + 32*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*20 + 2,x
+                lda #98+128
+                sta SCREENSTART + 32*20 + 3,x
+                jmp drawPipeEnd
+
+@               ;offset==2
+                lda add160,x
+                sta SCREENSTART + 32*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + 32*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + 32*20 + 2,x
+                lda #98+128
+                sta SCREENSTART + 32*20 + 3,x
+                lda add192+4,x
+                sta SCREENSTART + 32*20 + 4,x
+                jmp drawPipeEnd
+
+@               ;offset==3
+                lda #99+128
+                sta SCREENSTART + 32*20 + 1,x
+                lda #100+128
+                sta SCREENSTART + 32*20 + 2,x
+                lda #101+128
+                sta SCREENSTART + 32*20 + 3,x
+                lda add192+4,x
+                sta SCREENSTART + 32*20 + 4,x
+                ;jmp drawPipeEnd
+
+drawPipeEnd:
+                pla
+                tay
+                pla
+                tax
+                pla
+                rts
+
+
+
+pipeX               dta $0
+pipeXOffset         dta $0
+row                 dta $0
+
+drawRowAddrs        dta a(drawRow0),a(drawRow1),a(drawRow2),a(drawRow3),a(drawRow4),a(drawRow5)
+                    dta a(drawRow6),a(drawRow7),a(drawRow8),a(drawRow9),a(drawRow10),a(drawRow11)
+                    dta a(drawRow12),a(drawRow13),a(drawRow14)
+
+drawRowBAddrs       dta a(drawRowB0),a(drawRowB1),a(drawRowB2),a(drawRowB3),a(drawRowB4)
+
+add32               dta 32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
+add64               dta 64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95
+add160              dta 160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183
+                    dta 184,185,186,187,188,189,190,191
+add192              dta 192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215
+                    dta 216,217,218,219,220,221,222,223
+
+;=============================================================
 ;---------------- VBLANK routine -----------------------------
 ;=============================================================
 VBI             jsr RASTERMUSICTRACKER+3 ;play
+
+                ;jsr undrawPipe
 
                /*Decimal
                    14
@@ -301,23 +615,102 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                    13*/
 
                 ;right
-                ;lda STICK0
-                ;and #$08
-                ;bne @+
-                ;adb pipeX #$01
+                lda STICK0
+                and #$08
+                bne @+
+                adb pipe1XOffset #$01
                 // jsr drawPipe
 
                 ;left
-@               ;lda STICK0
-                ;and #$04
-                ;bne @+
-                ;sbb pipeX #$01
+@               lda STICK0
+                and #$04
+                bne @+
+                sbb pipe1XOffset #$01
                 // jsr drawPipe
 
-                mva #0 currentCharset
+@               lda pipe1XOffset
+                cmp #4
+                bne @+
+                inc pipe1X
+                mva #0 pipe1XOffset
+                jmp @+1
+@               cmp #255
+                bne @+
+                dec pipe1X
+                mva #3 pipe1XOffset
 
-@               jmp XITVBV ;end vbi
+@               mva #0 currentCharset
 
+                lda pipe1XOffset
+                bne @+
+                ;pipe1XOffset==0
+                mwa #charsetAddrsForOffset0 chbaseLoad+1
+                jmp chbaseCalcEnd
+@               lda pipe1XOffset
+                cmp #2
+                bne @+
+                ;pipe1XOffset=2
+                mwa #charsetAddrsForOffset2 chbaseLoad+1
+                jmp chbaseCalcEnd
+@               ;pipe1XOffset==1 or 3
+                mwa #charsetAddrsForOffset1and3 chbaseLoad+1
+
+chbaseCalcEnd:
+
+                mva pipe1X pipeX
+                mva pipe1XOffset pipeXOffset
+
+                mva #0 row
+                jsr drawPipe
+                mva #1 row
+                jsr drawPipe
+                mva #2 row
+                jsr drawPipe
+                mva #3 row
+                jsr drawPipe
+                mva #4 row
+                jsr drawPipe
+                mva #5 row
+                jsr drawPipe
+                mva #6 row
+                jsr drawPipe
+                mva #7 row
+                jsr drawPipe
+                mva #8 row
+                jsr drawPipe
+                mva #9 row
+                jsr drawPipe
+                mva #10 row
+                jsr drawPipe
+                mva #11 row
+                jsr drawPipe
+                mva #12 row
+                jsr drawPipe
+                mva #13 row
+                jsr drawPipe
+                mva #14 row
+                jsr drawPipe
+                mva #15 row
+                jsr drawPipe
+                mva #16 row
+                jsr drawPipe
+                mva #17 row
+                jsr drawPipe
+                mva #18 row
+                jsr drawPipe
+                mva #19 row
+                jsr drawPipe
+                mva #20 row
+                jsr drawPipe
+                mva #21 row
+                jsr drawPipe
+
+                jmp XITVBV ;end vbi
+
+pipe1X          dta $0
+pipe1XOffset    dta $0
+pipe2X          dta $0
+pipe2XOffset    dta $0
 
 ;=============================================================
 ;---------------- DLI routine --------------------------------
@@ -327,7 +720,7 @@ DLI             pha
                 pha
 
                 ldx currentCharset
-                lda charsetAddrs,x
+chbaseLoad      lda charsetAddrsForOffset0,x
                 inx
                 stx currentCharset
                 sta WSYNC
@@ -338,8 +731,10 @@ DLI             pha
                 pla
                 rti
 
-currentCharset  dta $0
-charsetAddrs    dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET
+currentCharset              dta $0
+charsetAddrsForOffset0      dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET
+charsetAddrsForOffset1and3  dta >CHARSET+$08,>CHARSET+$14,>CHARSET+$20,>CHARSET+$2C,>CHARSET+$38,>CHARSET+$44,>CHARSET
+charsetAddrsForOffset2      dta >CHARSET+$0C,>CHARSET+$18,>CHARSET+$24,>CHARSET+$30,>CHARSET+$3C,>CHARSET+$48,>CHARSET
 
 ;=============================================================
 ;------------- draw background -------------------------------
