@@ -1,6 +1,12 @@
 PROGSTART = $2000
 ANTICDLSTART = $B000
-SCREENSTART = $B040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
+SCREENSTART = $B060 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
+
+;screen width in characters;
+;normally screen is 32 characters in narrow mode, however we need 4 sentinel characters
+;before the left edge of the screen and 4 after the right to support pipe clipping
+SCRW = 40
+
 CHARSET = $6000; $6000-$ABFF
 ;PIPES = $9C00 ; $9C00-9F20
 
@@ -238,8 +244,8 @@ generateScreenData
                 txa
                 pha
 
-                ;fill 15 mode lines (15*32 = 480 characters)
-                ;480 = 256 + 224
+                ;fill 15 mode lines (15*40 = 600 characters)
+                ;480 = 256 + 256 + 88
 
                 lda #0
                 ldx #0
@@ -247,16 +253,21 @@ generateScreenData
                 inx
                 bne @-
 
-                ldx #0
+                ;ldx #0
 @               sta SCREENSTART+256, x
                 inx
-                cpx #224
                 bne @-
 
-                .rept 5, (#*32)
+                ;ldx #0
+@               sta SCREENSTART+512, x
+                inx
+                cpx #88
+                bne @-
+
+                .rept 5, (#*SCRW)
                 lda #0
                 ldx #0
-@               sta SCREENSTART+480+:1, x
+@               sta SCREENSTART+600+:1+4, x
                 clc
                 adc #1
                 inx
@@ -266,7 +277,7 @@ generateScreenData
 
                 lda #$80
                 ldx #0
-@               sta SCREENSTART+640, x
+@               sta SCREENSTART+800+4, x
                 clc
                 adc #1
                 inx
@@ -275,7 +286,7 @@ generateScreenData
 
                 lda #1
                 ldx #31
-@               sta SCREENSTART+672, x
+@               sta SCREENSTART+840+4, x
                 dex
                 bpl @-
 
@@ -322,52 +333,52 @@ row21:          ldx pipeX
 
                 ;offset==0
                 lda #57
-                sta SCREENSTART + 32*21 + 0,x
+                sta SCREENSTART + SCRW*21 + 0,x
                 lda #58+128
-                sta SCREENSTART + 32*21 + 1,x
+                sta SCREENSTART + SCRW*21 + 1,x
                 lda #59+128
-                sta SCREENSTART + 32*21 + 2,x
+                sta SCREENSTART + SCRW*21 + 2,x
                 lda #60
-                sta SCREENSTART + 32*21 + 3,x
+                sta SCREENSTART + SCRW*21 + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==1
                 lda #69
-                sta SCREENSTART + 32*21 + 0,x
+                sta SCREENSTART + SCRW*21 + 0,x
                 lda #70+128
-                sta SCREENSTART + 32*21 + 1,x
+                sta SCREENSTART + SCRW*21 + 1,x
                 lda #71+128
-                sta SCREENSTART + 32*21 + 2,x
+                sta SCREENSTART + SCRW*21 + 2,x
                 lda #72+128
-                sta SCREENSTART + 32*21 + 3,x
+                sta SCREENSTART + SCRW*21 + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==2
                 lda #83
-                sta SCREENSTART + 32*21 + 0,x
+                sta SCREENSTART + SCRW*21 + 0,x
                 lda #84+128
-                sta SCREENSTART + 32*21 + 1,x
+                sta SCREENSTART + SCRW*21 + 1,x
                 lda #85+128
-                sta SCREENSTART + 32*21 + 2,x
+                sta SCREENSTART + SCRW*21 + 2,x
                 lda #86+128
-                sta SCREENSTART + 32*21 + 3,x
+                sta SCREENSTART + SCRW*21 + 3,x
                 lda #87
-                sta SCREENSTART + 32*21 + 4,x
+                sta SCREENSTART + SCRW*21 + 4,x
                 jmp finishDrawPipe
 
 @               ;offset==3
                 lda #98
-                sta SCREENSTART + 32*21 + 1,x
+                sta SCREENSTART + SCRW*21 + 1,x
                 lda #99+128
-                sta SCREENSTART + 32*21 + 2,x
+                sta SCREENSTART + SCRW*21 + 2,x
                 lda #100+128
-                sta SCREENSTART + 32*21 + 3,x
+                sta SCREENSTART + SCRW*21 + 3,x
                 lda #101
-                sta SCREENSTART + 32*21 + 4,x
+                sta SCREENSTART + SCRW*21 + 4,x
                 jmp finishDrawPipe
 
 rows0to14:      ;w A jest row
-                ;calcScreenAddr = SCREENSTART + row*32 + pipeX
+                ;calcScreenAddr = SCREENSTART + row*40 + pipeX
 
                 asl
                 tax
@@ -390,48 +401,48 @@ drawRow:1       cpy #3
 
                 ;offset==0
                 lda #2
-                sta SCREENSTART + 32*# + 0,x
+                sta SCREENSTART + SCRW*# + 0,x
                 lda #3+128
-                sta SCREENSTART + 32*# + 1,x
+                sta SCREENSTART + SCRW*# + 1,x
                 lda #4+128
-                sta SCREENSTART + 32*# + 2,x
+                sta SCREENSTART + SCRW*# + 2,x
                 lda #5
-                sta SCREENSTART + 32*# + 3,x
+                sta SCREENSTART + SCRW*# + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==1
                 lda #14
-                sta SCREENSTART + 32*# + 0,x
+                sta SCREENSTART + SCRW*# + 0,x
                 lda #15+128
-                sta SCREENSTART + 32*# + 1,x
+                sta SCREENSTART + SCRW*# + 1,x
                 lda #16+128
-                sta SCREENSTART + 32*# + 2,x
+                sta SCREENSTART + SCRW*# + 2,x
                 lda #17+128
-                sta SCREENSTART + 32*# + 3,x
+                sta SCREENSTART + SCRW*# + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==2
                 lda #28
-                sta SCREENSTART + 32*# + 0,x
+                sta SCREENSTART + SCRW*# + 0,x
                 lda #29+128
-                sta SCREENSTART + 32*# + 1,x
+                sta SCREENSTART + SCRW*# + 1,x
                 lda #30+128
-                sta SCREENSTART + 32*# + 2,x
+                sta SCREENSTART + SCRW*# + 2,x
                 lda #31+128
-                sta SCREENSTART + 32*# + 3,x
+                sta SCREENSTART + SCRW*# + 3,x
                 lda #32
-                sta SCREENSTART + 32*# + 4,x
+                sta SCREENSTART + SCRW*# + 4,x
                 jmp finishDrawPipe
 
 @               ;offset==3
                 lda #43
-                sta SCREENSTART + 32*# + 1,x
+                sta SCREENSTART + SCRW*# + 1,x
                 lda #44+128
-                sta SCREENSTART + 32*# + 2,x
+                sta SCREENSTART + SCRW*# + 2,x
                 lda #45+128
-                sta SCREENSTART + 32*# + 3,x
+                sta SCREENSTART + SCRW*# + 3,x
                 lda #46
-                sta SCREENSTART + 32*# + 4,x
+                sta SCREENSTART + SCRW*# + 4,x
                 jmp finishDrawPipe
 
                 .endr
@@ -466,49 +477,49 @@ drawRowB:1      cpy #3
                 beq @+
 
                 ;offset==0
-                lda add32,x
-                sta SCREENSTART + 32*(15+#) + 0,x
+                lda add32-4,x
+                sta SCREENSTART + SCRW*(15+#) + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*(15+#) + 1,x
+                sta SCREENSTART + SCRW*(15+#) + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*(15+#) + 2,x
-                lda add64+3,x
-                sta SCREENSTART + 32*(15+#) + 3,x
+                sta SCREENSTART + SCRW*(15+#) + 2,x
+                lda add64-1,x
+                sta SCREENSTART + SCRW*(15+#) + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==1
-                lda add32,x
-                sta SCREENSTART + 32*(15+#) + 0,x
+                lda add32-4,x
+                sta SCREENSTART + SCRW*(15+#) + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*(15+#) + 1,x
+                sta SCREENSTART + SCRW*(15+#) + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*(15+#) + 2,x
+                sta SCREENSTART + SCRW*(15+#) + 2,x
                 lda #98+128
-                sta SCREENSTART + 32*(15+#) + 3,x
+                sta SCREENSTART + SCRW*(15+#) + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==2
-                lda add32,x
-                sta SCREENSTART + 32*(15+#) + 0,x
+                lda add32-4,x
+                sta SCREENSTART + SCRW*(15+#) + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*(15+#) + 1,x
+                sta SCREENSTART + SCRW*(15+#) + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*(15+#) + 2,x
+                sta SCREENSTART + SCRW*(15+#) + 2,x
                 lda #98+128
-                sta SCREENSTART + 32*(15+#) + 3,x
-                lda add64+4,x
-                sta SCREENSTART + 32*(15+#) + 4,x
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*(15+#) + 4,x
                 jmp finishDrawPipe
 
 @               ;offset==3
                 lda #99+128
-                sta SCREENSTART + 32*(15+#) + 1,x
+                sta SCREENSTART + SCRW*(15+#) + 1,x
                 lda #100+128
-                sta SCREENSTART + 32*(15+#) + 2,x
+                sta SCREENSTART + SCRW*(15+#) + 2,x
                 lda #101+128
-                sta SCREENSTART + 32*(15+#) + 3,x
-                lda add64+4,x
-                sta SCREENSTART + 32*(15+#) + 4,x
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*(15+#) + 4,x
                 jmp finishDrawPipe
                 .endr
 
@@ -524,49 +535,49 @@ row20:
                 beq @+
 
                 ;offset==0
-                lda add160,x
-                sta SCREENSTART + 32*20 + 0,x
+                lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*20 + 1,x
+                sta SCREENSTART + SCRW*20 + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*20 + 2,x
-                lda add192+3,x
-                sta SCREENSTART + 32*20 + 3,x
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda add192-1,x
+                sta SCREENSTART + SCRW*20 + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==1
-                lda add160,x
-                sta SCREENSTART + 32*20 + 0,x
+                lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*20 + 1,x
+                sta SCREENSTART + SCRW*20 + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*20 + 2,x
+                sta SCREENSTART + SCRW*20 + 2,x
                 lda #98+128
-                sta SCREENSTART + 32*20 + 3,x
+                sta SCREENSTART + SCRW*20 + 3,x
                 jmp finishDrawPipe
 
 @               ;offset==2
-                lda add160,x
-                sta SCREENSTART + 32*20 + 0,x
+                lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
-                sta SCREENSTART + 32*20 + 1,x
+                sta SCREENSTART + SCRW*20 + 1,x
                 lda #97+128
-                sta SCREENSTART + 32*20 + 2,x
+                sta SCREENSTART + SCRW*20 + 2,x
                 lda #98+128
-                sta SCREENSTART + 32*20 + 3,x
-                lda add192+4,x
-                sta SCREENSTART + 32*20 + 4,x
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda add192+0,x
+                sta SCREENSTART + SCRW*20 + 4,x
                 jmp finishDrawPipe
 
 @               ;offset==3
                 lda #99+128
-                sta SCREENSTART + 32*20 + 1,x
+                sta SCREENSTART + SCRW*20 + 1,x
                 lda #100+128
-                sta SCREENSTART + 32*20 + 2,x
+                sta SCREENSTART + SCRW*20 + 2,x
                 lda #101+128
-                sta SCREENSTART + 32*20 + 3,x
-                lda add192+4,x
-                sta SCREENSTART + 32*20 + 4,x
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda add192+0,x
+                sta SCREENSTART + SCRW*20 + 4,x
                 ;jmp finishDrawPipe
 
 finishDrawPipe:
@@ -707,7 +718,7 @@ chbaseCalcEnd:
 
                 jmp XITVBV ;end vbi
 
-pipe1X          dta $0
+pipe1X          dta 32
 pipe1XOffset    dta $0
 pipe2X          dta $0
 pipe2XOffset    dta $0
@@ -751,18 +762,18 @@ codeend = *
 antic_dl
     dta $70,$70,$70 ;generate 24 blank lines (8 blank lines times 3)
 
+    .rept 14,#
     dta $44
-    dta a(SCREENSTART)
-
-    .rept 13
-    dta $04
+    dta a(SCREENSTART + SCRW*# + 4)
     .endr
 
-    .rept 7
-    dta $84
+    .rept 7,#
+    dta $C4
+    dta a(SCREENSTART + SCRW*(#+14) + 4)
     .endr
 
-    dta $04
+    dta $44
+    dta a(SCREENSTART + SCRW*21 + 4)
 
     dta $70,$70
 
