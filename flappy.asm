@@ -329,7 +329,7 @@ row21:          ldx pipeX
                 sta SCREENSTART + 32*21 + 2,x
                 lda #60
                 sta SCREENSTART + 32*21 + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==1
                 lda #69
@@ -340,7 +340,7 @@ row21:          ldx pipeX
                 sta SCREENSTART + 32*21 + 2,x
                 lda #72+128
                 sta SCREENSTART + 32*21 + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==2
                 lda #83
@@ -353,7 +353,7 @@ row21:          ldx pipeX
                 sta SCREENSTART + 32*21 + 3,x
                 lda #87
                 sta SCREENSTART + 32*21 + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==3
                 lda #98
@@ -364,7 +364,7 @@ row21:          ldx pipeX
                 sta SCREENSTART + 32*21 + 3,x
                 lda #101
                 sta SCREENSTART + 32*21 + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 rows0to14:      ;w A jest row
                 ;calcScreenAddr = SCREENSTART + row*32 + pipeX
@@ -397,7 +397,7 @@ drawRow:1       cpy #3
                 sta SCREENSTART + 32*# + 2,x
                 lda #5
                 sta SCREENSTART + 32*# + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==1
                 lda #14
@@ -408,7 +408,7 @@ drawRow:1       cpy #3
                 sta SCREENSTART + 32*# + 2,x
                 lda #17+128
                 sta SCREENSTART + 32*# + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==2
                 lda #28
@@ -421,7 +421,7 @@ drawRow:1       cpy #3
                 sta SCREENSTART + 32*# + 3,x
                 lda #32
                 sta SCREENSTART + 32*# + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==3
                 lda #43
@@ -432,7 +432,7 @@ drawRow:1       cpy #3
                 sta SCREENSTART + 32*# + 3,x
                 lda #46
                 sta SCREENSTART + 32*# + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
                 .endr
 
@@ -441,7 +441,7 @@ drawRow:1       cpy #3
                 ;offset2 - 28,29,30,31,32
                 ;offset3 - 43,44,45,46
 
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 rows15to19:
                 sec
@@ -474,7 +474,7 @@ drawRowB:1      cpy #3
                 sta SCREENSTART + 32*(15+#) + 2,x
                 lda add64+3,x
                 sta SCREENSTART + 32*(15+#) + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==1
                 lda add32,x
@@ -485,7 +485,7 @@ drawRowB:1      cpy #3
                 sta SCREENSTART + 32*(15+#) + 2,x
                 lda #98+128
                 sta SCREENSTART + 32*(15+#) + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==2
                 lda add32,x
@@ -498,7 +498,7 @@ drawRowB:1      cpy #3
                 sta SCREENSTART + 32*(15+#) + 3,x
                 lda add64+4,x
                 sta SCREENSTART + 32*(15+#) + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==3
                 lda #99+128
@@ -509,7 +509,7 @@ drawRowB:1      cpy #3
                 sta SCREENSTART + 32*(15+#) + 3,x
                 lda add64+4,x
                 sta SCREENSTART + 32*(15+#) + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
                 .endr
 
 row20:
@@ -532,7 +532,7 @@ row20:
                 sta SCREENSTART + 32*20 + 2,x
                 lda add192+3,x
                 sta SCREENSTART + 32*20 + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==1
                 lda add160,x
@@ -543,7 +543,7 @@ row20:
                 sta SCREENSTART + 32*20 + 2,x
                 lda #98+128
                 sta SCREENSTART + 32*20 + 3,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==2
                 lda add160,x
@@ -556,7 +556,7 @@ row20:
                 sta SCREENSTART + 32*20 + 3,x
                 lda add192+4,x
                 sta SCREENSTART + 32*20 + 4,x
-                jmp drawPipeEnd
+                jmp finishDrawPipe
 
 @               ;offset==3
                 lda #99+128
@@ -567,9 +567,9 @@ row20:
                 sta SCREENSTART + 32*20 + 3,x
                 lda add192+4,x
                 sta SCREENSTART + 32*20 + 4,x
-                ;jmp drawPipeEnd
+                ;jmp finishDrawPipe
 
-drawPipeEnd:
+finishDrawPipe:
                 pla
                 tay
                 pla
