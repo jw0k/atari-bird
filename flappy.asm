@@ -1,7 +1,7 @@
 PROGSTART = $2000
-ANTICDLSTART = $A000
-SCREENSTART = $A040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
-CHARSET = $5000; $5000-$9BFF
+ANTICDLSTART = $B000
+SCREENSTART = $B040 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
+CHARSET = $6000; $6000-$ABFF
 ;PIPES = $9C00 ; $9C00-9F20
 
 CHBAS = $02F4
@@ -62,6 +62,7 @@ MODUL = $4000
 codestart
 
     jsr generateScreenData
+    jsr generateCharset
 
     // mva #40 pipeX
     // jsr drawPipe
@@ -98,6 +99,136 @@ codestart
 
 loop
     jmp loop
+
+;=============================================================
+;---------------- generate charset ---------------------------
+;=============================================================
+generateCharset
+                pha
+                txa
+                pha
+
+                ldx #0
+
+                .rept 6,#
+                ;-------- generate charset #0 --------
+                ;merge charset0 with left pipe edge
+                ;ldx #0 ;x already 0
+@               lda charset:1,x
+                and #$C0
+                ora #$06
+                sta charset:1+8*32,x
+                inx
+                bne @-
+
+                ;merge charset0 with right pipe edge
+                ;ldx #0 ;x already 0 at this point
+@               lda charset:1,x
+                and #$03
+                sta charset:1+8*64,x
+                inx
+                bne @-
+
+                // $06
+                // $AF
+                // $FF
+                // $00
+                ;-------------------------------------
+
+
+                ;-------- generate charset #1 & #3 ---
+                ;copy background
+                ;ldx #0 ;x already 0 at this point
+@               lda charset:1,x
+                sta charset:1a,x
+                inx
+                bne @-
+
+                ;merge charset0 with left pipe edge (offset 1)
+                ;ldx #0 ;x already 0
+@               lda charset:1,x
+                and #$F0
+                ora #$01
+                sta charset:1a+8*32,x
+                inx
+                bne @-
+
+                ;merge charset0 with right pipe edge (offset 3)
+                ;ldx #0 ;x already 0 at this point
+@               lda charset:1,x
+                and #$0F
+                sta charset:1a+8*64,x
+                inx
+                bne @-
+                ;-------------------------------------
+
+
+                ;-------- generate charset #2 --------
+                ;copy background
+                ;ldx #0 ;x already 0 at this point
+@               lda charset:1,x
+                sta charset:1b,x
+                inx
+                bne @-
+
+                ;merge charset0 with left pipe edge (offset 2)
+                ;ldx #0 ;x already 0
+@               lda charset:1,x
+                and #$FC
+                sta charset:1b+8*32,x
+                inx
+                bne @-
+
+                ;merge charset0 with right pipe edge (offset 2)
+                ;ldx #0 ;x already 0
+@               lda charset:1,x
+                and #$3F
+                sta charset:1b+8*64,x
+                inx
+                bne @-
+                ;-------------------------------------
+                .endr
+
+
+                ;------- copy other pipe elements -----
+                ;ldx #0 ;x already 0
+@               lda charset0+8*96,x
+                sta charset1+8*96,x
+                sta charset2+8*96,x
+                sta charset3+8*96,x
+                sta charset4+8*96,x
+                sta charset5+8*96,x
+                inx
+                cpx #(8*10)
+                bne @-
+
+                ldx #0
+@               lda charset0a+8*96,x
+                sta charset1a+8*96,x
+                sta charset2a+8*96,x
+                sta charset3a+8*96,x
+                sta charset4a+8*96,x
+                sta charset5a+8*96,x
+                inx
+                cpx #(8*18)
+                bne @-
+
+                ldx #0
+@               lda charset0b+8*96,x
+                sta charset1b+8*96,x
+                sta charset2b+8*96,x
+                sta charset3b+8*96,x
+                sta charset4b+8*96,x
+                sta charset5b+8*96,x
+                inx
+                cpx #(8*9)
+                bne @-
+                ;----------------------------------------
+
+                pla
+                tax
+                pla
+                rts
 
 ;=============================================================
 ;---------------- generate screen data -----------------------
