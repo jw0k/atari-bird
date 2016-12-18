@@ -49,6 +49,7 @@ WSYNC = $D40A
 SETVBV = $E45C
 XITVBV = $E462
 
+PORTA = $D300
 STICK0 = $278
 
 
@@ -85,10 +86,10 @@ codestart
 
     mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
 
-    ldy #<VBI
-	ldx #>VBI
-	lda #$7 ;6 - immediate VBI, 7 - deferred VBI
-	jsr SETVBV
+    ;ldy #<VBI
+	;ldx #>VBI
+	;lda #$7 ;6 - immediate VBI, 7 - deferred VBI
+	;jsr SETVBV
 
     ;set new address of antic's display list
     mwa	#antic_dl SDLSTL
@@ -666,10 +667,14 @@ add160              dta 160,161,162,163,164,165,166,167,168,169,170,171,172,173,
 add192              dta 192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215
                     dta 216,217,218,219,220,221,222,223
 
+
 ;=============================================================
-;---------------- VBLANK routine -----------------------------
+;---------------- Game loop ----------------------------------
 ;=============================================================
-VBI             jsr RASTERMUSICTRACKER+3 ;play
+gameLoop
+                pha
+
+                jsr RASTERMUSICTRACKER+3 ;play
 
                 jsr undrawPipe
                 ;jsr generateScreenData
@@ -686,14 +691,14 @@ VBI             jsr RASTERMUSICTRACKER+3 ;play
                    13*/
 
                 ;right
-                lda STICK0
+                lda PORTA
                 and #$08
                 bne @+
                 adb pipe1XOffset #$01
                 // jsr drawPipe
 
                 ;left
-@               lda STICK0
+@               lda PORTA
                 and #$04
                 bne @+
                 sbb pipe1XOffset #$01
@@ -776,7 +781,8 @@ chbaseCalcEnd:
                 mva #21 row
                 jsr drawPipe
 
-                jmp XITVBV ;end vbi
+                pla
+                rts
 
 pipe1X          dta 32
 pipe1XOffset    dta $0
@@ -796,22 +802,19 @@ chbaseLoad      lda charsetAddrsForOffset0,x
                 stx currentCharset
                 sta WSYNC
                 sta CHBASE
+                cpx #8
+                bne @+
+                jsr gameLoop
 
-                pla
+@               pla
                 tax
                 pla
                 rti
 
 currentCharset              dta $0
-charsetAddrsForOffset0      dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET
-charsetAddrsForOffset1and3  dta >CHARSET+$08,>CHARSET+$14,>CHARSET+$20,>CHARSET+$2C,>CHARSET+$38,>CHARSET+$44,>CHARSET
-charsetAddrsForOffset2      dta >CHARSET+$0C,>CHARSET+$18,>CHARSET+$24,>CHARSET+$30,>CHARSET+$3C,>CHARSET+$48,>CHARSET
-
-;=============================================================
-;------------- draw background -------------------------------
-;=============================================================
-drawBackground  nop
-                rts
+charsetAddrsForOffset0      dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+$28,>CHARSET+$34,>CHARSET+$40,>CHARSET,>CHARSET
+charsetAddrsForOffset1and3  dta >CHARSET+$08,>CHARSET+$14,>CHARSET+$20,>CHARSET+$2C,>CHARSET+$38,>CHARSET+$44,>CHARSET,>CHARSET
+charsetAddrsForOffset2      dta >CHARSET+$0C,>CHARSET+$18,>CHARSET+$24,>CHARSET+$30,>CHARSET+$3C,>CHARSET+$48,>CHARSET,>CHARSET
 
     run codestart
 
@@ -835,7 +838,7 @@ antic_dl
     dta $44
     dta a(SCREENSTART + SCRW*21 + 4)
 
-    dta $70,$70
+    dta $70,$F0
 
     dta $41 ;jump and wait for vblank
     dta a(antic_dl) ;display list address
