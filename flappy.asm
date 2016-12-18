@@ -300,7 +300,66 @@ generateScreenData
 ;=============================================================
 undrawPipe
                 pha
+                txa
+                pha
 
+                ldx pipeX
+                .rept 15
+                lda #0
+                sta SCREENSTART + SCRW*# + 0, x
+                sta SCREENSTART + SCRW*# + 1, x
+                sta SCREENSTART + SCRW*# + 2, x
+                sta SCREENSTART + SCRW*# + 3, x
+                sta SCREENSTART + SCRW*# + 4, x
+                .endr
+
+                .rept 5
+                lda pipeX
+                sec
+                sbc #4
+                ldx pipeX
+                sta SCREENSTART + SCRW*(15+#) + 0, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*(15+#) + 1, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*(15+#) + 2, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*(15+#) + 3, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*(15+#) + 4, x
+                .endr
+
+                lda pipeX
+                clc
+                adc #124
+                ldx pipeX
+                sta SCREENSTART + SCRW*20 + 0, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*20 + 1, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*20 + 2, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*20 + 3, x
+                clc
+                adc #1
+                sta SCREENSTART + SCRW*20 + 4, x
+
+                lda #1
+                sta SCREENSTART + SCRW*21 + 0, x
+                sta SCREENSTART + SCRW*21 + 1, x
+                sta SCREENSTART + SCRW*21 + 2, x
+                sta SCREENSTART + SCRW*21 + 3, x
+                sta SCREENSTART + SCRW*21 + 4, x
+
+                pla
+                tax
                 pla
                 rts
 
@@ -612,7 +671,8 @@ add192              dta 192,193,194,195,196,197,198,199,200,201,202,203,204,205,
 ;=============================================================
 VBI             jsr RASTERMUSICTRACKER+3 ;play
 
-                ;jsr undrawPipe
+                jsr undrawPipe
+                ;jsr generateScreenData
 
                /*Decimal
                    14
