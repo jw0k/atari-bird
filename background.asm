@@ -260,9 +260,11 @@ charset0a
     dta $00,$55,$FF,$FF,$FF,$FF,$FF,$00 ;middle endDown (offset 3)
     dta $00,$AF,$FF,$FF,$FF,$FF,$FF,$00 ;middle-right endDown (offset 3)
 
-    ;here: 8 runtime-generated characters (left endUp offset 1, right endUp offset 1,
-    ;left endUp offset 3, right endUp offset 3, left endDown offset 1, right endDown offset 1,
-    ;left endDown offset 3, right endDown offset 3)
+    ;here: 8 runtime-generated characters:
+    ;(left end (up/down) offset 1 for pipe 1, right end (up/down) offset 1 for pipe 1,
+    ;left end (up/down) offset 3 for pipe 1, right end (up/down) offset 3 for pipe 1,
+    ;left end (up/down) offset 1 for pipe 2, right end (up/down) offset 1 for pipe 2,
+    ;left end (up/down) offset 3 for pipe 2, right end (up/down) offset 3 for pipe 2)
 
 
     ORG CHARSET + $0C00
@@ -284,8 +286,10 @@ charset0b
     dta $00,$56,$FF,$FF,$FF,$FF,$FF,$00 ;middle endDown (offset 2)
     dta $00,$BC,$FC,$FC,$FC,$FC,$FC,$00 ;middle-right endDown (offset 2)
 
-    ;here: 4 runtime-generated characters (left endUp offset 2, right endUp offset 2,
-    ;left endDown offset 2, right endDown offset 2)
+    ;here: 4 runtime-generated characters (+2 dummies (16 bytes gap) to align with layout of offset 1&3 charset):
+    ;(left end (up/down) offset 2 for pipe 1, right end (up/down) offset 2 for pipe 1,
+    ;dummy1, dummy2,
+    ;left end (up/down) offset 2 for pipe 2, right end (up/down) offset 2 for pipe2)
 
 
 ;charset #16
