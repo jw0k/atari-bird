@@ -1,4 +1,4 @@
-PROGSTART = $2000
+PROGSTART = $1000
 ANTICDLSTART = $B000
 SCREENSTART = $B060 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
 
@@ -12,6 +12,8 @@ CHARSET = $6000; $6000-$ABFF
 
 CHBAS = $02F4
 CHBASE = $D409
+
+VCOUNT = $D40B
 
 NMIEN = $D40E
 VDSLST = $0200
@@ -58,10 +60,10 @@ STEREOMODE = 0
 
     icl "rmtplayr.a65"
     opt h-
-    ins "blah.rmt" ;blah.rmt loads at $4000
+    ins "sunset1.rmt" ;sunset1.rmt loads at $4800
     opt h+
 
-MODUL = $4000
+MODUL = $4800
 ;----------------------
 
     org PROGSTART
@@ -295,6 +297,551 @@ generateScreenData
                 tax
                 pla
                 rts
+
+;=============================================================
+;------------------ generate sides (up)  ---------------------
+;=============================================================
+generateSidesUp
+                pha
+                txa
+                pha
+                tya
+                pha
+
+                ;pipeXOffset - offset (dla 0 nie, dla 1, 2 i 3)
+                ldy pipeXOffset
+                bne @+
+                jmp finishGenerateSidesUp
+
+@               lda row
+                sec
+                sbc #15
+                asl
+                tax
+                lda genSidesUpAddrs,x
+                sta genJmpUp+1
+                lda genSidesUpAddrs+1,x
+                sta genJmpUp+2
+
+                ;pipeX-4 - index charactera
+                lda pipeX ;0 <= pipeX <= 35
+                asl
+                asl
+                asl ;multiply by 8
+                tax
+
+genJmpUp        jmp $FFFF
+
+                .rept 6,#
+genSidesUp:1    cpy #3
+                jeq @+1
+                cpy #2
+                jeq @+
+
+                ;offset 1
+                ;right
+                lda charset:1 + 0,x
+                and #$3F
+                sta charset:1a + 8*115 + 0
+                lda charset:1 + 1,x
+                and #$3F
+                sta charset:1a + 8*115 + 1
+                lda charset:1 + 2,x
+                and #$3F
+                sta charset:1a + 8*115 + 2
+                lda charset:1 + 3,x
+                and #$3F
+                sta charset:1a + 8*115 + 3
+                lda charset:1 + 4,x
+                and #$3F
+                sta charset:1a + 8*115 + 4
+                lda charset:1 + 5,x
+                and #$3F
+                sta charset:1a + 8*115 + 5
+                lda charset:1 + 6,x
+                and #$3F
+                sta charset:1a + 8*115 + 6
+                lda charset:1 + 7,x
+                and #$3F
+                sta charset:1a + 8*115 + 7
+
+                lda pipeX
+                sec
+                sbc #4
+                asl
+                asl
+                asl
+                tax
+
+                ;left
+                lda charset:1 + 0,x
+                and #$C0
+                sta charset:1a + 8*114 + 0
+                lda charset:1 + 1,x
+                and #$C0
+                ora #$06
+                sta charset:1a + 8*114 + 1
+                lda charset:1 + 2,x
+                and #$C0
+                ora #$06
+                sta charset:1a + 8*114 + 2
+                lda charset:1 + 3,x
+                and #$C0
+                ora #$06
+                sta charset:1a + 8*114 + 3
+                lda charset:1 + 4,x
+                and #$C0
+                ora #$06
+                sta charset:1a + 8*114 + 4
+                lda charset:1 + 5,x
+                and #$C0
+                ora #$06
+                sta charset:1a + 8*114 + 5
+                lda charset:1 + 6,x
+                and #$C0
+                ora #$05
+                sta charset:1a + 8*114 + 6
+                lda charset:1 + 7,x
+                and #$C0
+                sta charset:1a + 8*114 + 7
+                jmp finishGenerateSidesUp
+
+
+@               ;offset2
+                ;right
+                lda charset:1 + 0,x
+                and #$0F
+                sta charset:1b + 8*106 + 0
+                lda charset:1 + 1,x
+                and #$0F
+                sta charset:1b + 8*106 + 1
+                lda charset:1 + 2,x
+                and #$0F
+                sta charset:1b + 8*106 + 2
+                lda charset:1 + 3,x
+                and #$0F
+                sta charset:1b + 8*106 + 3
+                lda charset:1 + 4,x
+                and #$0F
+                sta charset:1b + 8*106 + 4
+                lda charset:1 + 5,x
+                and #$0F
+                sta charset:1b + 8*106 + 5
+                lda charset:1 + 6,x
+                and #$0F
+                sta charset:1b + 8*106 + 6
+                lda charset:1 + 7,x
+                and #$0F
+                sta charset:1b + 8*106 + 7
+
+                lda pipeX
+                sec
+                sbc #4
+                asl
+                asl
+                asl
+                tax
+
+                ;left
+                lda charset:1 + 0,x
+                and #$F0
+                sta charset:1b + 8*105 + 0
+                lda charset:1 + 1,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 1
+                lda charset:1 + 2,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 2
+                lda charset:1 + 3,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 3
+                lda charset:1 + 4,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 4
+                lda charset:1 + 5,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 5
+                lda charset:1 + 6,x
+                and #$F0
+                ora #$01
+                sta charset:1b + 8*105 + 6
+                lda charset:1 + 7,x
+                and #$F0
+                sta charset:1b + 8*105 + 7
+                jmp finishGenerateSidesUp
+
+
+@               ;offset3
+                ;right
+                lda charset:1 + 0,x
+                and #$03
+                sta charset:1a + 8*117 + 0
+                lda charset:1 + 1,x
+                and #$03
+                sta charset:1a + 8*117 + 1
+                lda charset:1 + 2,x
+                and #$03
+                sta charset:1a + 8*117 + 2
+                lda charset:1 + 3,x
+                and #$03
+                sta charset:1a + 8*117 + 3
+                lda charset:1 + 4,x
+                and #$03
+                sta charset:1a + 8*117 + 4
+                lda charset:1 + 5,x
+                and #$03
+                sta charset:1a + 8*117 + 5
+                lda charset:1 + 6,x
+                and #$03
+                sta charset:1a + 8*117 + 6
+                lda charset:1 + 7,x
+                and #$03
+                sta charset:1a + 8*117 + 7
+
+                lda pipeX
+                sec
+                sbc #4
+                asl
+                asl
+                asl
+                tax
+
+                ;left
+                lda charset:1 + 0,x
+                and #$FC
+                sta charset:1a + 8*116 + 0
+                lda charset:1 + 1,x
+                and #$FC
+                sta charset:1a + 8*116 + 1
+                lda charset:1 + 2,x
+                and #$FC
+                sta charset:1a + 8*116 + 2
+                lda charset:1 + 3,x
+                and #$FC
+                sta charset:1a + 8*116 + 3
+                lda charset:1 + 4,x
+                and #$FC
+                sta charset:1a + 8*116 + 4
+                lda charset:1 + 5,x
+                and #$FC
+                sta charset:1a + 8*116 + 5
+                lda charset:1 + 6,x
+                and #$FC
+                sta charset:1a + 8*116 + 6
+                lda charset:1 + 7,x
+                and #$FC
+                sta charset:1a + 8*116 + 7
+                jmp finishGenerateSidesUp
+
+                .endr
+
+finishGenerateSidesUp:
+
+                pla
+                tay
+                pla
+                tax
+                pla
+                rts
+
+;=============================================================
+;---------------- draw pipe end segment (up)  ----------------
+;=============================================================
+drawPipeUp
+                pha
+                txa
+                pha
+                tya
+                pha
+
+                lda row
+                cmp #15
+                jmi rows0to14Up
+                cmp #20
+                jmi rows15to19Up
+                jeq row20Up
+
+row21Up:        ldx pipeX
+                ldy pipeXOffset
+
+                cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #61
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #62+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #63+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #64+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                jmp finishDrawPipeUp
+
+@               ;offset==1
+                lda #73
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #74+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #75+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #76+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                lda #77
+                sta SCREENSTART + SCRW*21 + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==2
+                lda #88
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #89+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #90+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #91+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                lda #92
+                sta SCREENSTART + SCRW*21 + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==3
+                lda #102
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #103+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #104+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #105+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                lda #106
+                sta SCREENSTART + SCRW*21 + 4,x
+                jmp finishDrawPipeUp
+
+rows0to14Up:
+                asl
+                tax
+                lda drawRowAddrsUp,x
+                sta rowJmpUp+1
+                lda drawRowAddrsUp+1,x
+                sta rowJmpUp+2
+
+                ldx pipeX
+                ldy pipeXOffset
+rowJmpUp        jmp $FFFF
+
+                .rept 15,#
+drawRowUp:1     cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #6
+                sta SCREENSTART + SCRW*# + 0,x
+                lda #7+128
+                sta SCREENSTART + SCRW*# + 1,x
+                lda #8+128
+                sta SCREENSTART + SCRW*# + 2,x
+                lda #9+128
+                sta SCREENSTART + SCRW*# + 3,x
+                jmp finishDrawPipeUp
+
+@               ;offset==1
+                lda #18
+                sta SCREENSTART + SCRW*# + 0,x
+                lda #19+128
+                sta SCREENSTART + SCRW*# + 1,x
+                lda #20+128
+                sta SCREENSTART + SCRW*# + 2,x
+                lda #21+128
+                sta SCREENSTART + SCRW*# + 3,x
+                lda #22
+                sta SCREENSTART + SCRW*# + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==2
+                lda #33
+                sta SCREENSTART + SCRW*# + 0,x
+                lda #34+128
+                sta SCREENSTART + SCRW*# + 1,x
+                lda #35+128
+                sta SCREENSTART + SCRW*# + 2,x
+                lda #36+128
+                sta SCREENSTART + SCRW*# + 3,x
+                lda #37
+                sta SCREENSTART + SCRW*# + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==3
+                lda #47
+                sta SCREENSTART + SCRW*# + 0,x
+                lda #48+128
+                sta SCREENSTART + SCRW*# + 1,x
+                lda #49+128
+                sta SCREENSTART + SCRW*# + 2,x
+                lda #50+128
+                sta SCREENSTART + SCRW*# + 3,x
+                lda #51
+                sta SCREENSTART + SCRW*# + 4,x
+                jmp finishDrawPipeUp
+
+                .endr
+
+                jmp finishDrawPipeUp
+
+rows15to19Up:
+                sec
+                sbc #15
+                asl
+                tax
+                lda drawRowBAddrsUp,x
+                sta rowBJmpUp+1
+                lda drawRowBAddrsUp+1,x
+                sta rowBJmpUp+2
+
+                ldx pipeX
+                ldy pipeXOffset
+rowBJmpUp       jmp $FFFF
+
+                .rept 5,#
+drawRowBUp:1    cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #98
+                sta SCREENSTART + SCRW*(15+#) + 0,x
+                lda #99+128
+                sta SCREENSTART + SCRW*(15+#) + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*(15+#) + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                jmp finishDrawPipeUp
+
+@               ;offset==1
+                lda #114
+                sta SCREENSTART + SCRW*(15+#) + 0,x
+                lda #102+128
+                sta SCREENSTART + SCRW*(15+#) + 1,x
+                lda #103+128
+                sta SCREENSTART + SCRW*(15+#) + 2,x
+                lda #104+128
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                lda #115
+                sta SCREENSTART + SCRW*(15+#) + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==2
+                lda #105
+                sta SCREENSTART + SCRW*(15+#) + 0,x
+                lda #99+128
+                sta SCREENSTART + SCRW*(15+#) + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*(15+#) + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                lda #106
+                sta SCREENSTART + SCRW*(15+#) + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==3
+                lda #116
+                sta SCREENSTART + SCRW*(15+#) + 0,x
+                lda #105+128
+                sta SCREENSTART + SCRW*(15+#) + 1,x
+                lda #106+128
+                sta SCREENSTART + SCRW*(15+#) + 2,x
+                lda #107+128
+                sta SCREENSTART + SCRW*(15+#) + 3,x
+                lda #117
+                sta SCREENSTART + SCRW*(15+#) + 4,x
+                jmp finishDrawPipeUp
+                .endr
+
+row20Up:
+                ldx pipeX
+                ldy pipeXOffset
+
+                cpy #3
+                jeq @+2
+                cpy #2
+                beq @+1
+                cpy #1
+                beq @+
+
+                ;offset==0
+                lda #98
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #99+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                jmp finishDrawPipeUp
+
+@               ;offset==1
+                lda #114+128
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #102+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #103+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #104+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda #115+128
+                sta SCREENSTART + SCRW*20 + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==2
+                lda #105+128
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #99+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda #106+128
+                sta SCREENSTART + SCRW*20 + 4,x
+                jmp finishDrawPipeUp
+
+@               ;offset==3
+                lda #116+128
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #105+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #106+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #107+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda #117+128
+                sta SCREENSTART + SCRW*20 + 4,x
+                ;jmp finishDrawPipeUp
+
+finishDrawPipeUp:
+                pla
+                tay
+                pla
+                tax
+                pla
+                rts
+
 
 ;=============================================================
 ;---------------- undraw pipe  -------------------------------
@@ -658,7 +1205,15 @@ drawRowAddrs        dta a(drawRow0),a(drawRow1),a(drawRow2),a(drawRow3),a(drawRo
                     dta a(drawRow6),a(drawRow7),a(drawRow8),a(drawRow9),a(drawRow10),a(drawRow11)
                     dta a(drawRow12),a(drawRow13),a(drawRow14)
 
+drawRowAddrsUp      dta a(drawRowUp0),a(drawRowUp1),a(drawRowUp2),a(drawRowUp3),a(drawRowUp4),a(drawRowUp5)
+                    dta a(drawRowUp6),a(drawRowUp7),a(drawRowUp8),a(drawRowUp9),a(drawRowUp10),a(drawRowUp11)
+                    dta a(drawRowUp12),a(drawRowUp13),a(drawRowUp14)
+
 drawRowBAddrs       dta a(drawRowB0),a(drawRowB1),a(drawRowB2),a(drawRowB3),a(drawRowB4)
+
+drawRowBAddrsUp     dta a(drawRowBUp0),a(drawRowBUp1),a(drawRowBUp2),a(drawRowBUp3),a(drawRowBUp4)
+
+genSidesUpAddrs     dta a(genSidesUp0),a(genSidesUp1),a(genSidesUp2),a(genSidesUp3),a(genSidesUp4),a(genSidesUp5)
 
 add32               dta 32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
 add64               dta 64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95
@@ -676,6 +1231,8 @@ gameLoop
 
                 jsr RASTERMUSICTRACKER+3 ;play
 
+                jsr undrawPipe
+                mva pipe1X pipeX
                 jsr undrawPipe
                 ;jsr generateScreenData
 
@@ -708,11 +1265,13 @@ gameLoop
                 cmp #4
                 bne @+
                 inc pipe1X
+                inc pipe2X
                 mva #0 pipe1XOffset
                 jmp @+1
 @               cmp #255
                 bne @+
                 dec pipe1X
+                dec pipe2X
                 mva #3 pipe1XOffset
 
 @               mva #0 currentCharset
@@ -781,13 +1340,72 @@ chbaseCalcEnd:
                 mva #21 row
                 jsr drawPipe
 
-                pla
+                mva pipe2X pipeX
+                mva #0 row
+                jsr drawPipeUp
+                mva #1 row
+                jsr drawPipeUp
+                mva #2 row
+                jsr drawPipeUp
+                mva #3 row
+                jsr drawPipe
+                mva #4 row
+                jsr drawPipe
+                mva #5 row
+                jsr drawPipe
+                mva #6 row
+                jsr drawPipeUp
+                mva #7 row
+                jsr drawPipe
+                mva #8 row
+                jsr drawPipe
+                mva #9 row
+                jsr drawPipe
+                mva #10 row
+                jsr drawPipe
+                mva #11 row
+                jsr drawPipe
+                mva #12 row
+                jsr drawPipe
+                mva #13 row
+                jsr drawPipeUp
+                mva #14 row
+                jsr drawPipeUp
+                mva #15 row
+                jsr drawPipe
+                mva #16 row
+                jsr drawPipe
+                mva #17 row
+                jsr drawPipe
+                mva #18 row
+                jsr generateSidesUp
+                jsr drawPipeUp
+                mva #19 row
+                jsr generateSidesUp
+                jsr drawPipeUp
+                mva #20 row
+                jsr generateSidesUp
+                jsr drawPipeUp
+                mva #21 row
+                jsr drawPipeUp
+
+                lda VCOUNT
+                cmp #30
+                bcs @+
+
+                cmp maxVCount
+                bmi @+
+                sta maxVCount
+
+
+@               pla
                 rts
 
-pipe1X          dta 32
+pipe1X          dta 5
 pipe1XOffset    dta $0
-pipe2X          dta $0
-pipe2XOffset    dta $0
+pipe2X          dta 18
+
+maxVCount       dta $0
 
 ;=============================================================
 ;---------------- DLI routine --------------------------------

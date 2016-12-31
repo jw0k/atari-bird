@@ -27,11 +27,11 @@ TRACKS		equ 8
 TRACKS		equ 4
 	EIF
 ;*
-PLAYER		equ $3A00
+PLAYER		equ $4400
 ;*
 ;* RMT FEATures definitions file
 ;* For optimizations of RMT player routine to concrete RMT modul only!
-	icl "rmt_feat.a65"
+	icl "sunset_feat.a65"
 ;*
 ;* RMT ZeroPage addresses
 	org 203
