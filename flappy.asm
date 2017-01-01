@@ -1360,7 +1360,7 @@ drawRowAddrsEnd     dta a(drawRowEnd0),a(drawRowEnd1),a(drawRowEnd2),a(drawRowEn
 
 drawRowBAddrsEnd    dta a(drawRowBEnd0),a(drawRowBEnd1),a(drawRowBEnd2),a(drawRowBEnd3),a(drawRowBEnd4)
 
-genSidesAddrs     dta a(genSides0),a(genSides1),a(genSides2),a(genSides3),a(genSides4),a(genSides5)
+genSidesAddrs       dta a(genSides0),a(genSides1),a(genSides2),a(genSides3),a(genSides4),a(genSides5)
 
 pipeEndsCharNums ;first 76 numbers for up-end and next 76 for down-end
     dta 61,62+128,63+128,64+128                 ;row 21 offset 0 (up)
@@ -1505,9 +1505,7 @@ chbaseCalcEnd:
                 mva #2 row
                 jsr drawPipe
                 mva #3 row
-                mva #76 upOrDown
-                jsr drawPipeEnd
-                mva #0 upOrDown
+                jsr drawPipe
                 mva #4 row
                 jsr drawPipe
                 mva #5 row
@@ -1534,38 +1532,34 @@ chbaseCalcEnd:
                 jsr drawPipe
                 mva #16 row
                 jsr drawPipe
+
                 mva #17 row
-                mva #76 upOrDown
+                mva #0 upOrDown
                 jsr generateSides
                 jsr drawPipeEnd
-                mva #0 upOrDown
-                mva #18 row
-                jsr drawPipe
+
                 mva #19 row
                 mva #76 upOrDown
                 jsr generateSides
                 jsr drawPipeEnd
-                mva #0 upOrDown
+
                 mva #20 row
-                mva #76 upOrDown
-                jsr generateSides
-                jsr drawPipeEnd
-                mva #0 upOrDown
+                jsr drawPipe
                 mva #21 row
-                mva #76 upOrDown
-                jsr drawPipeEnd
-                mva #0 upOrDown
+                jsr drawPipe
+
+
 
                 mva pipe2X pipeX
                 mva #32 pipe1Or2
                 jsr prepareDataForPipe2
 
                 mva #0 row
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #1 row
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #2 row
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #3 row
                 jsr drawPipe
                 mva #4 row
@@ -1573,7 +1567,7 @@ chbaseCalcEnd:
                 mva #5 row
                 jsr drawPipe
                 mva #6 row
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #7 row
                 jsr drawPipe
                 mva #8 row
@@ -1587,26 +1581,28 @@ chbaseCalcEnd:
                 mva #12 row
                 jsr drawPipe
                 mva #13 row
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #14 row
-                jsr drawPipeEnd
+                jsr drawPipe
+
                 mva #15 row
-                jsr drawPipe
-                mva #16 row
-                jsr drawPipe
+                mva #0 upOrDown
+                jsr generateSides
+                jsr drawPipeEnd
+
                 mva #17 row
-                jsr drawPipe
+                mva #76 upOrDown
+                jsr generateSides
+                jsr drawPipeEnd
+
                 mva #18 row
-                jsr generateSides
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #19 row
-                jsr generateSides
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #20 row
-                jsr generateSides
-                jsr drawPipeEnd
+                jsr drawPipe
                 mva #21 row
-                jsr drawPipeEnd
+                jsr drawPipe
 
                 lda VCOUNT
                 cmp #30
@@ -1615,7 +1611,6 @@ chbaseCalcEnd:
                 cmp maxVCount
                 bmi @+
                 sta maxVCount
-
 
 @               pla
                 rts
