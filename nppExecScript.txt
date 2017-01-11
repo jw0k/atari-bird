@@ -1,0 +1,25 @@
+NPP_SAVE
+cd $(CURRENT_DIRECTORY)
+
+mads flappy.asm -o:flappy.xex
+IF $(EXITCODE)!=0 GOTO EXITWITHERROR
+
+mads flappy.asm -l:flappy.lst
+IF $(EXITCODE)!=0 GOTO EXITWITHERROR
+
+mads flappy.asm -o:flappy_c.xex -d:INCLUDE_CASLOADER
+IF $(EXITCODE)!=0 GOTO EXITWITHERROR
+
+xex2cas -plain -r flappy_c.xex flappy_withLoader.cas
+IF $(EXITCODE)!=0 GOTO EXITWITHERROR
+
+rm flappy_c.xex
+
+python fixcas.py flappy_withLoader.cas 5
+IF $(EXITCODE)!=0 GOTO EXITWITHERROR
+
+NPP_CONSOLE OFF
+GOTO EXITSCRIPT
+:EXITWITHERROR
+echo blad na ktoryms etapie
+:EXITSCRIPT

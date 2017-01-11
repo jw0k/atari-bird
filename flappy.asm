@@ -1,6 +1,14 @@
+.IFDEF INCLUDE_CASLOADER
+    icl "casloader.asm"
+.ENDIF
+
+
+.local flappy
 PROGSTART = $600
 ANTICDLSTART = $B000
 SCREENSTART = $B060 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
+PLAYERS = $B000 ;this value will be written to PMBASE; it must be on 2K boundary (1K for double-line player resolution)
+
 
 ;screen width in characters;
 ;normally screen is 32 characters wide in narrow mode, however we need 4 sentinel characters
@@ -20,12 +28,38 @@ VDSLST = $0200
 
 DMACTL = $D400
 SDMCTL = $022F
+GRACTL = $D01D
+
+PRIOR = $D01B
+GPRIOR = $026F
+
+PMBASE = $D407
+
+HPOSP0 = $D000
+HPOSP1 = $D001
+HPOSP2 = $D002
+HPOSP3 = $D003
+HPOSM0 = $D004
+HPOSM1 = $D005
+HPOSM2 = $D006
+HPOSM3 = $D007
+
+SIZEP0 = $D008
+SIZEP1 = $D009
+SIZEP2 = $D00A
+SIZEP3 = $D00B
+SIZEM = $D00C
+
+PCOLR0 = $2C0 ;COLPM0 = $D012, color of player 0 and missile 0
+PCOLR1 = $2C1 ;COLPM1 = $D013, color of player 1 and missile 1
+PCOLR2 = $2C2 ;COLPM2 = $D014, color of player 2 and missile 2
+PCOLR3 = $2C3 ;COLPM3 = $D015, color of player 3 and missile 3
 
 COLOR4 = $2C8 ;COLBK = $D01A
 COLOR0 = $2C4 ;COLPF0 = $D016
 COLOR1 = $2C5 ;COLPF1 = $D017
 COLOR2 = $2C6 ;COLPF2 = $D018
-COLOR3 = $2C7 ;COLPF3 = $D019
+COLOR3 = $2C7 ;COLPF3 = $D019, this is also the color of the fifth player
 
 DOSVEC = $0A
 MEMLO = $02E7 ;=$0700; bottom of free memory
@@ -70,6 +104,9 @@ MODUL = $4800
 
 codestart
 
+    mva #$00 SDMCTL
+    mva #$00 DMACTL
+
     jsr generateScreenData
     jsr generateCharset
 
@@ -86,7 +123,14 @@ codestart
     cmp RTCLOK3
     beq *-2 ;jump 2 bytes backwards (to the first byte of cmp instruction)
 
-    mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
+    ;mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
+    mva #$3D SDMCTL ;set narrow playfield (while keeping instruction DMA enabled), enable player DMA, enable missile DMA, single line resolution
+    mva #$03 GRACTL ;turn on players and missiles in GTIA
+    mva #>PLAYERS PMBASE
+    mva #$8F PCOLR0
+    mva #64 HPOSP0
+    mva #$01 GPRIOR
+    ;mva #$03 SIZEP0
 
     ;ldy #<VBI
 	;ldx #>VBI
@@ -1676,4 +1720,27 @@ antic_dl
     dta a(antic_dl) ;display list address
 
 
+
+    org PLAYERS+1024
+
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $AA,$55,$AA,$55,$AA,$55,$AA,$55
+    dta $AA,$55,$AA,$55,$AA,$55,$AA,$55
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+    dta $00,$00,$00,$00,$00,$00,$00,$00
+
     icl "background.asm"
+
+.endl
