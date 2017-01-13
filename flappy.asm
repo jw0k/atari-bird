@@ -1809,6 +1809,7 @@ gameLoop
                 lda PORTA
                 and #$08
                 bne @+
+                adb pipe1XOffset #$01
                 inc playerY
                 inc playerWing
                 lda playerWing
@@ -1816,12 +1817,12 @@ gameLoop
                 bne @+
                 lda #0
                 sta playerWing
-                adb pipe1XOffset #$01
 
                 ;left
 @               lda PORTA
                 and #$04
                 bne @+
+                sbb pipe1XOffset #$01
                 dec playerY
                 dec playerWing
                 lda playerWing
@@ -1829,7 +1830,6 @@ gameLoop
                 bne @+
                 lda #2
                 sta playerWing
-                sbb pipe1XOffset #$01
 
 @               lda pipe1XOffset
                 cmp #4
