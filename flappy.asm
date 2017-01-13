@@ -1697,10 +1697,10 @@ DLI             pha
 
                 ldx currentCharset
 chbaseLoad      lda charsetAddrsForOffset0,x
-                inx
-                stx currentCharset
                 sta WSYNC
                 sta CHBASE
+                inx
+                stx currentCharset
                 cpx #8
                 bne @+
                 jsr gameLoop
