@@ -1,14 +1,14 @@
+    icl "equates.asm"
+
 .IFDEF INCLUDE_CASLOADER
     icl "casloader.asm"
 .ENDIF
 
-
-.local flappy
 PROGSTART = $600
 ANTICDLSTART = $B000
-SCREENSTART = $B060 ;remember about 12 bit screen memory counter in ANTIC (4k boundary)
-PLAYERS = $B000 ;this value will be written to PMBASE; it must be on 2K boundary (1K for double-line player resolution)
-
+SCREENSTART = $B060 ;($B060 - ~$B400) remember about 12 bit screen memory counter in ANTIC (4k boundary)
+PLAYERSTORE = $B400
+PLAYERS = $B800 ;this value will be written to PMBASE; it must be on 2K boundary (1K for double-line player resolution)
 
 ;screen width in characters;
 ;normally screen is 32 characters wide in narrow mode, however we need 4 sentinel characters
@@ -16,40 +16,8 @@ PLAYERS = $B000 ;this value will be written to PMBASE; it must be on 2K boundary
 SCRW = 40
 
 CHARSET = $6000; $6000-$ABFF
-;PIPES = $9C00 ; $9C00-9F20
 
-CHBAS = $02F4
-CHBASE = $D409
-
-VCOUNT = $D40B
-
-NMIEN = $D40E
-VDSLST = $0200
-
-DMACTL = $D400
-SDMCTL = $022F
-GRACTL = $D01D
-
-PRIOR = $D01B
-GPRIOR = $026F
-
-PMBASE = $D407
-
-HPOSP0 = $D000
-HPOSP1 = $D001
-HPOSP2 = $D002
-HPOSP3 = $D003
-HPOSM0 = $D004
-HPOSM1 = $D005
-HPOSM2 = $D006
-HPOSM3 = $D007
-
-SIZEP0 = $D008
-SIZEP1 = $D009
-SIZEP2 = $D00A
-SIZEP3 = $D00B
-SIZEM = $D00C
-
+/*
 PCOLR0 = $2C0 ;COLPM0 = $D012, color of player 0 and missile 0
 PCOLR1 = $2C1 ;COLPM1 = $D013, color of player 1 and missile 1
 PCOLR2 = $2C2 ;COLPM2 = $D014, color of player 2 and missile 2
@@ -60,7 +28,9 @@ COLOR0 = $2C4 ;COLPF0 = $D016
 COLOR1 = $2C5 ;COLPF1 = $D017
 COLOR2 = $2C6 ;COLPF2 = $D018
 COLOR3 = $2C7 ;COLPF3 = $D019, this is also the color of the fifth player
+*/
 
+/*
 DOSVEC = $0A
 MEMLO = $02E7 ;=$0700; bottom of free memory
 APPMHI = $E ;top of BASIC program. screen handler will not write memory below it
@@ -73,21 +43,7 @@ BASIC_MEMTOP = $90 ;pointer to the top of BASIC program
 OS_MEMTOP = $2E5 ;pointer to last byte of free ram. display list start 1 byte after
 SAVMSC = $58 ;pointer to the first byte of screen data
 TXTMSC = $294 ;pointer to the first byte of text window data
-
-RTCLOK1 = $12
-RTCLOK2 = $13
-RTCLOK3 = $14
-SDLSTL = $230 ;display list pointer
-HSCROL = $D404
-VSCROL = $D405
-WSYNC = $D40A
-
-SETVBV = $E45C
-XITVBV = $E462
-
-PORTA = $D300
-STICK0 = $278
-
+*/
 
 ;-------RMT stuff------
 STEREOMODE = 0
@@ -104,77 +60,71 @@ MODUL = $4800
 
 codestart
 
-    mva #$00 SDMCTL
+    ;disable ANTIC's bullshit
+    mva #$00 NMIEN
     mva #$00 DMACTL
 
     jsr generateScreenData
     jsr generateCharset
-
-    // mva #40 pipeX
-    // jsr drawPipe
+    jsr clearPlayer
 
     ldx #<MODUL
 	ldy #>MODUL
 	lda #0 ;starting song line
 	jsr RASTERMUSICTRACKER ;init
 
-    ;wait for vblank
-    lda RTCLOK3
-    cmp RTCLOK3
-    beq *-2 ;jump 2 bytes backwards (to the first byte of cmp instruction)
+    mva #>PLAYERS PMBASE
 
-    ;mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
-    mva #%00111101 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled), enable player DMA, enable missile DMA, single line resolution
+    mva #$00 COLPM0
+    mva #$00 COLPM1
+    mva #$FA COLPM2 ;1C, 2B, FA
+    mva #$0E COLPM3 ;0E, DE
+
+    mva #68 HPOSP0
+    mva #68+7 HPOSP1
+    mva #68+7 HPOSP2
+    mva #68 HPOSP3
+
+    ;mva #$01 SIZEP0
+    ;mva #$01 SIZEP1
+    ;mva #$01 SIZEP2
+    mva #$01 SIZEP3
+
+    mva #1 PRIOR ;players on top of the playfield
+
+    ;set new address of antic's display list
+    mwa	#antic_dl DLISTL
+
+    mva #>CHARSET CHBASE
+    mva #$0E COLPF0 ;chmury, bardzo jasna rura;   01
+    mva #$B8 COLPF1 ;trawa, okna, jasna rura;     10
+    mva #$98 COLPF2 ;niebo, budynki;              11
+    mva #$B4 COLPF3 ;ciemna trawa, rura;          11 (+high bit ustawiony w screen data)
+    mva #$00 COLBK  ;tlo, ciemna rura;            00
+
+    mwa #DLI VDSLST ;set vector of DLI handler
+
+    ;mva #$21 DMACTL ;set narrow playfield (while keeping instruction DMA enabled)
+    mva #%00111001 DMACTL ;set narrow playfield (while keeping instruction DMA enabled), enable player DMA, enable missile DMA, single line resolution
     ;bits 0-1 playfield on/off/width
     ;bit 2 - missile DMA
     ;bit 3 - player DMA
     ;bit 4 - one line player res
     ;bit 5 - instr DMA
 
-    mva #$03 GRACTL ;turn on players and missiles in GTIA
-    mva #>PLAYERS PMBASE
+    mva #$02 GRACTL ;turn on players in GTIA
 
-    mva #$00 PCOLR0
-    mva #$0E PCOLR1
-    mva #$1C PCOLR2
-    mva #$EE PCOLR3
-
-    mva #68 HPOSP0
-    mva #68 HPOSP1
-    mva #68 HPOSP2
-    mva #68 HPOSP3
-
-    mva #1 GPRIOR
-    ;mva #$01 SIZEP0
-    ;mva #$01 SIZEP1
-    ;mva #$01 SIZEP2
-    ;mva #$01 SIZEP3
-
-    ;ldy #<VBI
-	;ldx #>VBI
-	;lda #$7 ;6 - immediate VBI, 7 - deferred VBI
-	;jsr SETVBV
-
-    ;set new address of antic's display list
-    mwa	#antic_dl SDLSTL
-
-    mva #>CHARSET CHBAS
-    mva #$0E COLOR0 ;chmury, bardzo jasna rura;   01
-    mva #$B8 COLOR1 ;trawa, okna, jasna rura;     10
-    mva #$98 COLOR2 ;niebo, budynki;              11
-    mva #$B4 COLOR3 ;ciemna trawa, rura;          11 (+high bit ustawiony w screen data)
-    mva #$00 COLOR4 ;tlo, ciemna rura;            00
-
-    mwa #DLI VDSLST
-    mva #$C0 NMIEN ;enable dli (and keep vbi enabled)
-
-    ;lda RTCLOK3
-    ;cmp RTCLOK3
-    ;beq *-2
-    ;sei
+    sei ;turn off IRQs
+    mva #$FE PORTB ;disable ROM ($C000-$CFFF, $D800-$FFFF)
+    mwa #NMI $FFFA ;set 6502 NMI vector
+    mwa #IRQ $FFFE ;set 6502 IRQ vector
+    mva #$40 IRQEN ;enable only keyboard interrupts in POKEY (PIA interrupts are not used by OS)
+    mva #$80 NMIEN ;turn on NMIs (only DLI, no VBI!)
+    cli ;turn on IRQs
 
 loop
     jmp loop
+
 
 ;=============================================================
 ;---------------- generate charset ---------------------------
@@ -1490,6 +1440,188 @@ add160              dta 160,161,162,163,164,165,166,167,168,169,170,171,172,173,
 add192              dta 192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215
                     dta 216,217,218,219,220,221,222,223
 
+;=============================================================
+;---------------- Clear player -------------------------------
+;=============================================================
+clearPlayer
+                pha
+                txa
+                pha
+
+                lda #0
+                ldx #0
+
+@               sta PLAYERS+$400,X
+                inx
+                bne @-
+
+@               sta PLAYERS+$500,X
+                inx
+                bne @-
+
+@               sta PLAYERS+$600,X
+                inx
+                bne @-
+
+@               sta PLAYERS+$700,X
+                inx
+                bne @-
+
+                pla
+                tax
+                pla
+                rts
+
+;=============================================================
+;---------------- Draw player --------------------------------
+;=============================================================
+drawPlayer
+                pha
+                txa
+                pha
+
+                lda oldPlayerY
+                sta epSta1+1
+                sta epSta2+1
+                sta epSta3+1
+                sta epSta4+1
+
+                lda #0
+
+                ldx #17
+epSta1          sta PLAYERS+$400,X
+                dex
+                bpl epSta1
+
+                ldx #17
+epSta2          sta PLAYERS+$500,X
+                dex
+                bpl epSta2
+
+                ldx #17
+epSta3          sta PLAYERS+$600,X
+                dex
+                bpl epSta3
+
+                ldx #17
+epSta4          sta PLAYERS+$700,X
+                dex
+                bpl epSta4
+
+
+                lda playerY
+                sta oldPlayerY
+
+                ldx playerWing
+                cpx #2
+                beq wing2
+                cpx #1
+                beq wing1
+
+
+wing0           sta w0Sta1+1
+                sta w0Sta2+1
+                sta w0Sta3+1
+                sta w0Sta4+1
+
+                ldx #17
+@               lda PLAYERSTORE,X
+w0Sta1          sta PLAYERS+$400,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+18,X
+w0Sta2          sta PLAYERS+$500,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+36,X
+w0Sta3          sta PLAYERS+$600,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+54,X
+w0Sta4          sta PLAYERS+$700,X
+                dex
+                bpl @-
+
+                jmp finishDrawPlayer
+
+
+wing1           sta w1Sta1+1
+                sta w1Sta2+1
+                sta w1Sta3+1
+                sta w1Sta4+1
+
+                ldx #17
+@               lda PLAYERSTORE+72,X
+w1Sta1          sta PLAYERS+$400,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+18,X
+w1Sta2          sta PLAYERS+$500,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+36,X
+w1Sta3          sta PLAYERS+$600,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+90,X
+w1Sta4          sta PLAYERS+$700,X
+                dex
+                bpl @-
+
+                jmp finishDrawPlayer
+
+
+wing2           sta w2Sta1+1
+                sta w2Sta2+1
+                sta w2Sta3+1
+                sta w2Sta4+1
+
+                ldx #17
+@               lda PLAYERSTORE+108,X
+w2Sta1          sta PLAYERS+$400,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+18,X
+w2Sta2          sta PLAYERS+$500,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+36,X
+w2Sta3          sta PLAYERS+$600,X
+                dex
+                bpl @-
+
+                ldx #17
+@               lda PLAYERSTORE+126,X
+w2Sta4          sta PLAYERS+$700,X
+                dex
+                bpl @-
+
+
+finishDrawPlayer
+                pla
+                tax
+                pla
+                rts
+
+oldPlayerY      dta 40
+playerY         dta 40
+playerWing      dta 2 ;0-wing up, 1-wing level, 2-wing down
 
 ;=============================================================
 ;---------------- Game loop ----------------------------------
@@ -1519,14 +1651,28 @@ gameLoop
                 lda PORTA
                 and #$08
                 bne @+
-                adb pipe1XOffset #$01
+                inc playerY
+                inc playerWing
+                lda playerWing
+                cmp #3
+                bne @+
+                lda #0
+                sta playerWing
+                ;adb pipe1XOffset #$01
                 // jsr drawPipe
 
                 ;left
 @               lda PORTA
                 and #$04
                 bne @+
-                sbb pipe1XOffset #$01
+                dec playerY
+                dec playerWing
+                lda playerWing
+                cmp #255
+                bne @+
+                lda #2
+                sta playerWing
+                ;sbb pipe1XOffset #$01
                 // jsr drawPipe
 
 @               lda pipe1XOffset
@@ -1671,6 +1817,8 @@ chbaseCalcEnd:
                 mva #21 row
                 jsr drawPipe
 
+                jsr drawPlayer
+
                 lda VCOUNT
                 cmp #30
                 bcs @+
@@ -1682,9 +1830,9 @@ chbaseCalcEnd:
 @               pla
                 rts
 
-pipe1X          dta 5
+pipe1X          dta 10
 pipe1XOffset    dta $0
-pipe2X          dta 18
+pipe2X          dta 26
 
 maxVCount       dta $0
 
@@ -1715,6 +1863,34 @@ charsetAddrsForOffset0      dta >CHARSET+$04,>CHARSET+$10,>CHARSET+$1C,>CHARSET+
 charsetAddrsForOffset1and3  dta >CHARSET+$08,>CHARSET+$14,>CHARSET+$20,>CHARSET+$2C,>CHARSET+$38,>CHARSET+$44,>CHARSET,>CHARSET
 charsetAddrsForOffset2      dta >CHARSET+$0C,>CHARSET+$18,>CHARSET+$24,>CHARSET+$30,>CHARSET+$3C,>CHARSET+$48,>CHARSET,>CHARSET
 
+;=============================================================
+;---------------- NMI handler (we turn off the OS) -----------
+;=============================================================
+NMI
+                ;our only NMI source is DLI. we disable VBI in ANTIC at startup, because we don't need it.
+                ;all of the processing related to the game loop is done in the last DLI handler (after last visible scanline)
+                jmp (VDSLST)
+
+;=============================================================
+;---------------- IRQ handler (we turn off the OS) -----------
+;=============================================================
+IRQ             cld
+                pha
+
+                lda IRQST
+                and #$40 ;check if the source of irq is keyboard (except break key)
+                bne @+ ;it is not (bits in IRQST are 0 when active and 1 when inactive)
+
+                ;handle key press
+
+                mva #$00 IRQEN ;acknowledge IRQ to make POKEY stop asserting IRQ line
+                mva #$40 IRQEN ;restore IRQEN value (only keyboard interrupt enabled)
+
+                mva KBCODE CH ;store pressed key
+
+@               pla
+                rti
+
     run codestart
 
 codeend = *
@@ -1743,75 +1919,5 @@ antic_dl
     dta a(antic_dl) ;display list address
 
 
-
-    org PLAYERS+$400+40
-
-    ;black
-    dta %00011000
-    dta %00100100
-    dta %01000010
-    dta %01001010
-    dta %01001010
-    dta %10101010
-    dta %10100010
-    dta %10101111
-    dta %10110001
-    dta %01001110
-    dta %01010010
-    dta %01001100
-    dta %00110000
-
-    org PLAYERS+$500+40
-
-    ;white
-    dta %00000000
-    dta %00011000
-    dta %00111100
-    dta %00110100
-    dta %00110100
-    dta %01010100
-    dta %01011100
-    dta %01010000
-    dta %01000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-
-    org PLAYERS+$600+40
-
-    ;orange
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00001110
-    dta %00010000
-    dta %00001100
-    dta %00000000
-    dta %00000000
-
-    org PLAYERS+$700+40
-
-    ;yellow
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00000000
-    dta %00100000
-    dta %00100000
-    dta %00110000
-    dta %00000000
-
+    icl "player.asm"
     icl "background.asm"
-
-.endl

@@ -440,7 +440,7 @@ PBCTL       = 54019
 ;
 ; ANTIC
 ;
-DMACLT      = 54272
+DMACTL      = 54272
 CHACTL      = 54273
 DLISTL      = 54274
 DLISTH      = 54275
