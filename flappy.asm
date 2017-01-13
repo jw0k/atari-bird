@@ -1076,34 +1076,71 @@ undrawPipe
                 rts
 
 ;=============================================================
-;---------------- draw pipe  ---------------------------------
+;---------------- Draw pipe downward -------------------------
 ;=============================================================
-drawPipe
+drawPipeDownward
                 pha
                 txa
                 pha
-                tya
-                pha
 
-                lda row
-                cmp #15
-                bmi rows0to14
-                cmp #20
-                jmi rows15to19
-                jeq row20
+                ldx pipeX
 
-row21:          ldx pipeX
-                ldy pipeXOffset
-
-                cpy #3
-                jeq @+2
-                cpy #2
+                lda pipeXOffset
+                cmp #3
+                beq @+2
+                cmp #2
                 beq @+1
-                cpy #1
+                cmp #1
                 beq @+
 
-                ;offset==0
-                lda #57
+                mwa #off0dpdAddrs dpdJmp+1
+                jmp dpdCont
+@               mwa #off1dpdAddrs dpdJmp+1
+                jmp dpdCont
+@               mwa #off2dpdAddrs dpdJmp+1
+                jmp dpdCont
+@               mwa #off3dpdAddrs dpdJmp+1
+
+dpdCont         lda row
+                asl
+                clc
+                adc dpdJmp+1
+                sta dpdJmp+1
+                bcc dpdJmp
+                inc dpdJmp+2
+
+dpdJmp          jmp ($FFFF)
+
+                ;offset0
+                .rept 15,#
+off0dpd:1       lda #2
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #3+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #4+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #5
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                .rept 5,(15+#)
+off0dpd:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda add64-1,x
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+off0dpd20       lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda add192-1,x
+                sta SCREENSTART + SCRW*20 + 3,x
+off0dpd21       lda #57
                 sta SCREENSTART + SCRW*21 + 0,x
                 lda #58+128
                 sta SCREENSTART + SCRW*21 + 1,x
@@ -1111,10 +1148,38 @@ row21:          ldx pipeX
                 sta SCREENSTART + SCRW*21 + 2,x
                 lda #60
                 sta SCREENSTART + SCRW*21 + 3,x
-                jmp finishDrawPipe
+                jmp finishDrawPipeDownward
 
-@               ;offset==1
-                lda #69
+                ;offset1
+                .rept 15,#
+off1dpd:1       lda #14
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #15+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #16+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #17+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                .rept 5,(15+#)
+off1dpd:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+off1dpd20       lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*20 + 3,x
+off1dpd21       lda #69
                 sta SCREENSTART + SCRW*21 + 0,x
                 lda #70+128
                 sta SCREENSTART + SCRW*21 + 1,x
@@ -1122,10 +1187,44 @@ row21:          ldx pipeX
                 sta SCREENSTART + SCRW*21 + 2,x
                 lda #72+128
                 sta SCREENSTART + SCRW*21 + 3,x
-                jmp finishDrawPipe
+                jmp finishDrawPipeDownward
 
-@               ;offset==2
-                lda #83
+                ;offset2
+                .rept 15,#
+off2dpd:1       lda #28
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #29+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #30+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #31+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda #32
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                .rept 5,(15+#)
+off2dpd:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+off2dpd20       lda add160-4,x
+                sta SCREENSTART + SCRW*20 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda add192+0,x
+                sta SCREENSTART + SCRW*20 + 4,x
+off2dpd21       lda #83
                 sta SCREENSTART + SCRW*21 + 0,x
                 lda #84+128
                 sta SCREENSTART + SCRW*21 + 1,x
@@ -1135,10 +1234,38 @@ row21:          ldx pipeX
                 sta SCREENSTART + SCRW*21 + 3,x
                 lda #87
                 sta SCREENSTART + SCRW*21 + 4,x
-                jmp finishDrawPipe
+                jmp finishDrawPipeDownward
 
-@               ;offset==3
-                lda #98
+                ;offset3
+                .rept 15,#
+off3dpd:1       lda #43
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #44+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #45+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda #46
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                .rept 5,(15+#)
+off3dpd:1       lda #99+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+off3dpd20       lda #99+128
+                sta SCREENSTART + SCRW*20 + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*20 + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*20 + 3,x
+                lda add192+0,x
+                sta SCREENSTART + SCRW*20 + 4,x
+off3dpd21       lda #98
                 sta SCREENSTART + SCRW*21 + 1,x
                 lda #99+128
                 sta SCREENSTART + SCRW*21 + 2,x
@@ -1146,167 +1273,61 @@ row21:          ldx pipeX
                 sta SCREENSTART + SCRW*21 + 3,x
                 lda #101
                 sta SCREENSTART + SCRW*21 + 4,x
-                jmp finishDrawPipe
+                ;jmp finishDrawPipeDownward
 
-rows0to14:      ;w A jest row
-                ;calcScreenAddr = SCREENSTART + row*40 + pipeX
-
-                asl
+finishDrawPipeDownward
+                pla
                 tax
-                lda drawRowAddrs,x
-                sta rowJmp+1
-                lda drawRowAddrs+1,x
-                sta rowJmp+2
+                pla
+                rts
+
+
+;=============================================================
+;---------------- Draw pipe upward ---------------------------
+;=============================================================
+drawPipeUpward
+                pha
+                txa
+                pha
 
                 ldx pipeX
-                ldy pipeXOffset
-rowJmp          jmp $FFFF
 
-                .rept 15,#
-drawRow:1       cpy #3
-                jeq @+2
-                cpy #2
+                lda pipeXOffset
+                cmp #3
+                beq @+2
+                cmp #2
                 beq @+1
-                cpy #1
+                cmp #1
                 beq @+
 
-                ;offset==0
-                lda #2
-                sta SCREENSTART + SCRW*# + 0,x
-                lda #3+128
-                sta SCREENSTART + SCRW*# + 1,x
-                lda #4+128
-                sta SCREENSTART + SCRW*# + 2,x
-                lda #5
-                sta SCREENSTART + SCRW*# + 3,x
-                jmp finishDrawPipe
+                mwa #off0dpuAddrs dpuJmp+1
+                jmp dpuCont
+@               mwa #off1dpuAddrs dpuJmp+1
+                jmp dpuCont
+@               mwa #off2dpuAddrs dpuJmp+1
+                jmp dpuCont
+@               mwa #off3dpuAddrs dpuJmp+1
 
-@               ;offset==1
-                lda #14
-                sta SCREENSTART + SCRW*# + 0,x
-                lda #15+128
-                sta SCREENSTART + SCRW*# + 1,x
-                lda #16+128
-                sta SCREENSTART + SCRW*# + 2,x
-                lda #17+128
-                sta SCREENSTART + SCRW*# + 3,x
-                jmp finishDrawPipe
-
-@               ;offset==2
-                lda #28
-                sta SCREENSTART + SCRW*# + 0,x
-                lda #29+128
-                sta SCREENSTART + SCRW*# + 1,x
-                lda #30+128
-                sta SCREENSTART + SCRW*# + 2,x
-                lda #31+128
-                sta SCREENSTART + SCRW*# + 3,x
-                lda #32
-                sta SCREENSTART + SCRW*# + 4,x
-                jmp finishDrawPipe
-
-@               ;offset==3
-                lda #43
-                sta SCREENSTART + SCRW*# + 1,x
-                lda #44+128
-                sta SCREENSTART + SCRW*# + 2,x
-                lda #45+128
-                sta SCREENSTART + SCRW*# + 3,x
-                lda #46
-                sta SCREENSTART + SCRW*# + 4,x
-                jmp finishDrawPipe
-
-                .endr
-
-                ;offset0 - 2,3,4,5
-                ;offset1 - 14,15,16,17
-                ;offset2 - 28,29,30,31,32
-                ;offset3 - 43,44,45,46
-
-                jmp finishDrawPipe
-
-rows15to19:
-                sec
-                sbc #15
+dpuCont         lda row
                 asl
-                tax
-                lda drawRowBAddrs,x
-                sta rowBJmp+1
-                lda drawRowBAddrs+1,x
-                sta rowBJmp+2
+                clc
+                adc dpuJmp+1
+                sta dpuJmp+1
+                bcc dpuJmp
+                inc dpuJmp+2
 
-                ldx pipeX
-                ldy pipeXOffset
-rowBJmp         jmp $FFFF
+dpuJmp          jmp ($FFFF)
 
-                .rept 5,#
-drawRowB:1      cpy #3
-                jeq @+2
-                cpy #2
-                beq @+1
-                cpy #1
-                beq @+
-
-                ;offset==0
-                lda add32-4,x
-                sta SCREENSTART + SCRW*(15+#) + 0,x
-                lda #96+128
-                sta SCREENSTART + SCRW*(15+#) + 1,x
-                lda #97+128
-                sta SCREENSTART + SCRW*(15+#) + 2,x
-                lda add64-1,x
-                sta SCREENSTART + SCRW*(15+#) + 3,x
-                jmp finishDrawPipe
-
-@               ;offset==1
-                lda add32-4,x
-                sta SCREENSTART + SCRW*(15+#) + 0,x
-                lda #96+128
-                sta SCREENSTART + SCRW*(15+#) + 1,x
-                lda #97+128
-                sta SCREENSTART + SCRW*(15+#) + 2,x
-                lda #98+128
-                sta SCREENSTART + SCRW*(15+#) + 3,x
-                jmp finishDrawPipe
-
-@               ;offset==2
-                lda add32-4,x
-                sta SCREENSTART + SCRW*(15+#) + 0,x
-                lda #96+128
-                sta SCREENSTART + SCRW*(15+#) + 1,x
-                lda #97+128
-                sta SCREENSTART + SCRW*(15+#) + 2,x
-                lda #98+128
-                sta SCREENSTART + SCRW*(15+#) + 3,x
-                lda add64+0,x
-                sta SCREENSTART + SCRW*(15+#) + 4,x
-                jmp finishDrawPipe
-
-@               ;offset==3
-                lda #99+128
-                sta SCREENSTART + SCRW*(15+#) + 1,x
-                lda #100+128
-                sta SCREENSTART + SCRW*(15+#) + 2,x
-                lda #101+128
-                sta SCREENSTART + SCRW*(15+#) + 3,x
-                lda add64+0,x
-                sta SCREENSTART + SCRW*(15+#) + 4,x
-                jmp finishDrawPipe
-                .endr
-
-row20:
-                ldx pipeX
-                ldy pipeXOffset
-
-                cpy #3
-                jeq @+2
-                cpy #2
-                beq @+1
-                cpy #1
-                beq @+
-
-                ;offset==0
-                lda add160-4,x
+                ;offset0
+off0dpu21       lda #57
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #58+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #59+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #60
+                sta SCREENSTART + SCRW*21 + 3,x
+off0dpu20       lda add160-4,x
                 sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
                 sta SCREENSTART + SCRW*20 + 1,x
@@ -1314,10 +1335,38 @@ row20:
                 sta SCREENSTART + SCRW*20 + 2,x
                 lda add192-1,x
                 sta SCREENSTART + SCRW*20 + 3,x
-                jmp finishDrawPipe
+                .rept 5,(19-#)
+off0dpu:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda add64-1,x
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                .rept 15,(14-#)
+off0dpu:1       lda #2
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #3+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #4+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #5
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                jmp finishDrawPipeUpward
 
-@               ;offset==1
-                lda add160-4,x
+                ;offset1
+off1dpu21       lda #69
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #70+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #71+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #72+128
+                sta SCREENSTART + SCRW*21 + 3,x
+off1dpu20       lda add160-4,x
                 sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
                 sta SCREENSTART + SCRW*20 + 1,x
@@ -1325,10 +1374,40 @@ row20:
                 sta SCREENSTART + SCRW*20 + 2,x
                 lda #98+128
                 sta SCREENSTART + SCRW*20 + 3,x
-                jmp finishDrawPipe
+                .rept 5,(19-#)
+off1dpu:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                .rept 15,(14-#)
+off1dpu:1       lda #14
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #15+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #16+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #17+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                .endr
+                jmp finishDrawPipeUpward
 
-@               ;offset==2
-                lda add160-4,x
+                ;offset2
+off2dpu21       lda #83
+                sta SCREENSTART + SCRW*21 + 0,x
+                lda #84+128
+                sta SCREENSTART + SCRW*21 + 1,x
+                lda #85+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #86+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                lda #87
+                sta SCREENSTART + SCRW*21 + 4,x
+off2dpu20       lda add160-4,x
                 sta SCREENSTART + SCRW*20 + 0,x
                 lda #96+128
                 sta SCREENSTART + SCRW*20 + 1,x
@@ -1338,10 +1417,42 @@ row20:
                 sta SCREENSTART + SCRW*20 + 3,x
                 lda add192+0,x
                 sta SCREENSTART + SCRW*20 + 4,x
-                jmp finishDrawPipe
+                .rept 5,(19-#)
+off2dpu:1       lda add32-4,x
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #96+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #97+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #98+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                .rept 15,(14-#)
+off2dpu:1       lda #28
+                sta SCREENSTART + SCRW*:1 + 0,x
+                lda #29+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #30+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #31+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda #32
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                jmp finishDrawPipeUpward
 
-@               ;offset==3
+                ;offset3
+off3dpu21       lda #98
+                sta SCREENSTART + SCRW*21 + 1,x
                 lda #99+128
+                sta SCREENSTART + SCRW*21 + 2,x
+                lda #100+128
+                sta SCREENSTART + SCRW*21 + 3,x
+                lda #101
+                sta SCREENSTART + SCRW*21 + 4,x
+off3dpu20       lda #99+128
                 sta SCREENSTART + SCRW*20 + 1,x
                 lda #100+128
                 sta SCREENSTART + SCRW*20 + 2,x
@@ -1349,27 +1460,74 @@ row20:
                 sta SCREENSTART + SCRW*20 + 3,x
                 lda add192+0,x
                 sta SCREENSTART + SCRW*20 + 4,x
-                ;jmp finishDrawPipe
+                .rept 5,(19-#)
+off3dpu:1       lda #99+128
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #100+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #101+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda add64+0,x
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                .rept 15,(14-#)
+off3dpu:1       lda #43
+                sta SCREENSTART + SCRW*:1 + 1,x
+                lda #44+128
+                sta SCREENSTART + SCRW*:1 + 2,x
+                lda #45+128
+                sta SCREENSTART + SCRW*:1 + 3,x
+                lda #46
+                sta SCREENSTART + SCRW*:1 + 4,x
+                .endr
+                ;jmp finishDrawPipeUpward
 
-finishDrawPipe:
-                pla
-                tay
+finishDrawPipeUpward
                 pla
                 tax
                 pla
                 rts
 
-
-
 pipeX               dta $0
 pipeXOffset         dta $0
 row                 dta $0
 
-drawRowAddrs        dta a(drawRow0),a(drawRow1),a(drawRow2),a(drawRow3),a(drawRow4),a(drawRow5)
-                    dta a(drawRow6),a(drawRow7),a(drawRow8),a(drawRow9),a(drawRow10),a(drawRow11)
-                    dta a(drawRow12),a(drawRow13),a(drawRow14)
+                    ;avoid 6502 indirect jmp bug for all following addresses by aligning to an address divisible by 2
+                    .IF (*%2==1)
+                    .align *+1,0
+                    .ENDIF
 
-drawRowBAddrs       dta a(drawRowB0),a(drawRowB1),a(drawRowB2),a(drawRowB3),a(drawRowB4)
+off0dpdAddrs        dta a(off0dpd0),a(off0dpd1),a(off0dpd2),a(off0dpd3),a(off0dpd4),a(off0dpd5),a(off0dpd6),a(off0dpd7)
+                    dta a(off0dpd8),a(off0dpd9),a(off0dpd10),a(off0dpd11),a(off0dpd12),a(off0dpd13),a(off0dpd14),a(off0dpd15)
+                    dta a(off0dpd16),a(off0dpd17),a(off0dpd18),a(off0dpd19),a(off0dpd20),a(off0dpd21)
+
+off1dpdAddrs        dta a(off1dpd0),a(off1dpd1),a(off1dpd2),a(off1dpd3),a(off1dpd4),a(off1dpd5),a(off1dpd6),a(off1dpd7)
+                    dta a(off1dpd8),a(off1dpd9),a(off1dpd10),a(off1dpd11),a(off1dpd12),a(off1dpd13),a(off1dpd14),a(off1dpd15)
+                    dta a(off1dpd16),a(off1dpd17),a(off1dpd18),a(off1dpd19),a(off1dpd20),a(off1dpd21)
+
+off2dpdAddrs        dta a(off2dpd0),a(off2dpd1),a(off2dpd2),a(off2dpd3),a(off2dpd4),a(off2dpd5),a(off2dpd6),a(off2dpd7)
+                    dta a(off2dpd8),a(off2dpd9),a(off2dpd10),a(off2dpd11),a(off2dpd12),a(off2dpd13),a(off2dpd14),a(off2dpd15)
+                    dta a(off2dpd16),a(off2dpd17),a(off2dpd18),a(off2dpd19),a(off2dpd20),a(off2dpd21)
+
+off3dpdAddrs        dta a(off3dpd0),a(off3dpd1),a(off3dpd2),a(off3dpd3),a(off3dpd4),a(off3dpd5),a(off3dpd6),a(off3dpd7)
+                    dta a(off3dpd8),a(off3dpd9),a(off3dpd10),a(off3dpd11),a(off3dpd12),a(off3dpd13),a(off3dpd14),a(off3dpd15)
+                    dta a(off3dpd16),a(off3dpd17),a(off3dpd18),a(off3dpd19),a(off3dpd20),a(off3dpd21)
+
+off0dpuAddrs        dta a(off0dpu0),a(off0dpu1),a(off0dpu2),a(off0dpu3),a(off0dpu4),a(off0dpu5),a(off0dpu6),a(off0dpu7)
+                    dta a(off0dpu8),a(off0dpu9),a(off0dpu10),a(off0dpu11),a(off0dpu12),a(off0dpu13),a(off0dpu14),a(off0dpu15)
+                    dta a(off0dpu16),a(off0dpu17),a(off0dpu18),a(off0dpu19),a(off0dpu20),a(off0dpu21)
+
+off1dpuAddrs        dta a(off1dpu0),a(off1dpu1),a(off1dpu2),a(off1dpu3),a(off1dpu4),a(off1dpu5),a(off1dpu6),a(off1dpu7)
+                    dta a(off1dpu8),a(off1dpu9),a(off1dpu10),a(off1dpu11),a(off1dpu12),a(off1dpu13),a(off1dpu14),a(off1dpu15)
+                    dta a(off1dpu16),a(off1dpu17),a(off1dpu18),a(off1dpu19),a(off1dpu20),a(off1dpu21)
+
+off2dpuAddrs        dta a(off2dpu0),a(off2dpu1),a(off2dpu2),a(off2dpu3),a(off2dpu4),a(off2dpu5),a(off2dpu6),a(off2dpu7)
+                    dta a(off2dpu8),a(off2dpu9),a(off2dpu10),a(off2dpu11),a(off2dpu12),a(off2dpu13),a(off2dpu14),a(off2dpu15)
+                    dta a(off2dpu16),a(off2dpu17),a(off2dpu18),a(off2dpu19),a(off2dpu20),a(off2dpu21)
+
+off3dpuAddrs        dta a(off3dpu0),a(off3dpu1),a(off3dpu2),a(off3dpu3),a(off3dpu4),a(off3dpu5),a(off3dpu6),a(off3dpu7)
+                    dta a(off3dpu8),a(off3dpu9),a(off3dpu10),a(off3dpu11),a(off3dpu12),a(off3dpu13),a(off3dpu14),a(off3dpu15)
+                    dta a(off3dpu16),a(off3dpu17),a(off3dpu18),a(off3dpu19),a(off3dpu20),a(off3dpu21)
 
 drawRowAddrsEnd     dta a(drawRowEnd0),a(drawRowEnd1),a(drawRowEnd2),a(drawRowEnd3),a(drawRowEnd4),a(drawRowEnd5)
                     dta a(drawRowEnd6),a(drawRowEnd7),a(drawRowEnd8),a(drawRowEnd9),a(drawRowEnd10),a(drawRowEnd11)
@@ -1658,8 +1816,7 @@ gameLoop
                 bne @+
                 lda #0
                 sta playerWing
-                ;adb pipe1XOffset #$01
-                // jsr drawPipe
+                adb pipe1XOffset #$01
 
                 ;left
 @               lda PORTA
@@ -1672,8 +1829,7 @@ gameLoop
                 bne @+
                 lda #2
                 sta playerWing
-                ;sbb pipe1XOffset #$01
-                // jsr drawPipe
+                sbb pipe1XOffset #$01
 
 @               lda pipe1XOffset
                 cmp #4
@@ -1711,40 +1867,8 @@ chbaseCalcEnd:
                 mva #0 pipe1Or2
                 jsr prepareDataForPipe1
 
-                mva #0 row
-                jsr drawPipe
-                mva #1 row
-                jsr drawPipe
-                mva #2 row
-                jsr drawPipe
-                mva #3 row
-                jsr drawPipe
-                mva #4 row
-                jsr drawPipe
-                mva #5 row
-                jsr drawPipe
-                mva #6 row
-                jsr drawPipe
-                mva #7 row
-                jsr drawPipe
-                mva #8 row
-                jsr drawPipe
-                mva #9 row
-                jsr drawPipe
-                mva #10 row
-                jsr drawPipe
-                mva #11 row
-                jsr drawPipe
-                mva #12 row
-                jsr drawPipe
-                mva #13 row
-                jsr drawPipe
-                mva #14 row
-                jsr drawPipe
-                mva #15 row
-                jsr drawPipe
                 mva #16 row
-                jsr drawPipe
+                jsr drawPipeUpward
 
                 mva #17 row
                 mva #0 upOrDown
@@ -1757,46 +1881,15 @@ chbaseCalcEnd:
                 jsr drawPipeEnd
 
                 mva #20 row
-                jsr drawPipe
-                mva #21 row
-                jsr drawPipe
-
+                jsr drawPipeDownward
 
 
                 mva pipe2X pipeX
                 mva #32 pipe1Or2
                 jsr prepareDataForPipe2
 
-                mva #0 row
-                jsr drawPipe
-                mva #1 row
-                jsr drawPipe
-                mva #2 row
-                jsr drawPipe
-                mva #3 row
-                jsr drawPipe
-                mva #4 row
-                jsr drawPipe
-                mva #5 row
-                jsr drawPipe
-                mva #6 row
-                jsr drawPipe
-                mva #7 row
-                jsr drawPipe
-                mva #8 row
-                jsr drawPipe
-                mva #9 row
-                jsr drawPipe
-                mva #10 row
-                jsr drawPipe
-                mva #11 row
-                jsr drawPipe
-                mva #12 row
-                jsr drawPipe
-                mva #13 row
-                jsr drawPipe
                 mva #14 row
-                jsr drawPipe
+                jsr drawPipeUpward
 
                 mva #15 row
                 mva #0 upOrDown
@@ -1809,15 +1902,11 @@ chbaseCalcEnd:
                 jsr drawPipeEnd
 
                 mva #18 row
-                jsr drawPipe
-                mva #19 row
-                jsr drawPipe
-                mva #20 row
-                jsr drawPipe
-                mva #21 row
-                jsr drawPipe
+                jsr drawPipeDownward
+
 
                 jsr drawPlayer
+
 
                 lda VCOUNT
                 cmp #30
