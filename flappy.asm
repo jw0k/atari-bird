@@ -1016,57 +1016,32 @@ undrawPipe
                 pha
 
                 ldx pipeX
-                .rept 15
+
                 lda #0
-                sta SCREENSTART + SCRW*# + 0, x
-                sta SCREENSTART + SCRW*# + 1, x
-                sta SCREENSTART + SCRW*# + 2, x
+                .rept 15
                 sta SCREENSTART + SCRW*# + 3, x
                 sta SCREENSTART + SCRW*# + 4, x
                 .endr
 
-                .rept 5
                 lda pipeX
-                sec
-                sbc #4
-                ldx pipeX
-                sta SCREENSTART + SCRW*(15+#) + 0, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*(15+#) + 1, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*(15+#) + 2, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*(15+#) + 3, x
-                clc
-                adc #1
+                .rept 5
                 sta SCREENSTART + SCRW*(15+#) + 4, x
+                .endr
+                sec
+                sbc #1
+                .rept 5
+                sta SCREENSTART + SCRW*(15+#) + 3, x
                 .endr
 
                 lda pipeX
                 clc
-                adc #124
-                ldx pipeX
-                sta SCREENSTART + SCRW*20 + 0, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*20 + 1, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*20 + 2, x
-                clc
-                adc #1
-                sta SCREENSTART + SCRW*20 + 3, x
-                clc
-                adc #1
+                adc #128
                 sta SCREENSTART + SCRW*20 + 4, x
+                sec
+                sbc #1
+                sta SCREENSTART + SCRW*20 + 3, x
 
                 lda #1
-                sta SCREENSTART + SCRW*21 + 0, x
-                sta SCREENSTART + SCRW*21 + 1, x
-                sta SCREENSTART + SCRW*21 + 2, x
                 sta SCREENSTART + SCRW*21 + 3, x
                 sta SCREENSTART + SCRW*21 + 4, x
 
