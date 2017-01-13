@@ -124,13 +124,31 @@ codestart
     beq *-2 ;jump 2 bytes backwards (to the first byte of cmp instruction)
 
     ;mva #$21 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled)
-    mva #$3D SDMCTL ;set narrow playfield (while keeping instruction DMA enabled), enable player DMA, enable missile DMA, single line resolution
+    mva #%00111101 SDMCTL ;set narrow playfield (while keeping instruction DMA enabled), enable player DMA, enable missile DMA, single line resolution
+    ;bits 0-1 playfield on/off/width
+    ;bit 2 - missile DMA
+    ;bit 3 - player DMA
+    ;bit 4 - one line player res
+    ;bit 5 - instr DMA
+
     mva #$03 GRACTL ;turn on players and missiles in GTIA
     mva #>PLAYERS PMBASE
-    mva #$8F PCOLR0
-    mva #64 HPOSP0
-    mva #$01 GPRIOR
-    ;mva #$03 SIZEP0
+
+    mva #$00 PCOLR0
+    mva #$0E PCOLR1
+    mva #$1C PCOLR2
+    mva #$EE PCOLR3
+
+    mva #68 HPOSP0
+    mva #68 HPOSP1
+    mva #68 HPOSP2
+    mva #68 HPOSP3
+
+    mva #1 GPRIOR
+    ;mva #$01 SIZEP0
+    ;mva #$01 SIZEP1
+    ;mva #$01 SIZEP2
+    ;mva #$01 SIZEP3
 
     ;ldy #<VBI
 	;ldx #>VBI
@@ -149,6 +167,11 @@ codestart
 
     mwa #DLI VDSLST
     mva #$C0 NMIEN ;enable dli (and keep vbi enabled)
+
+    ;lda RTCLOK3
+    ;cmp RTCLOK3
+    ;beq *-2
+    ;sei
 
 loop
     jmp loop
@@ -1721,25 +1744,73 @@ antic_dl
 
 
 
-    org PLAYERS+1024
+    org PLAYERS+$400+40
 
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $AA,$55,$AA,$55,$AA,$55,$AA,$55
-    dta $AA,$55,$AA,$55,$AA,$55,$AA,$55
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
-    dta $00,$00,$00,$00,$00,$00,$00,$00
+    ;black
+    dta %00011000
+    dta %00100100
+    dta %01000010
+    dta %01001010
+    dta %01001010
+    dta %10101010
+    dta %10100010
+    dta %10101111
+    dta %10110001
+    dta %01001110
+    dta %01010010
+    dta %01001100
+    dta %00110000
+
+    org PLAYERS+$500+40
+
+    ;white
+    dta %00000000
+    dta %00011000
+    dta %00111100
+    dta %00110100
+    dta %00110100
+    dta %01010100
+    dta %01011100
+    dta %01010000
+    dta %01000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+
+    org PLAYERS+$600+40
+
+    ;orange
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00001110
+    dta %00010000
+    dta %00001100
+    dta %00000000
+    dta %00000000
+
+    org PLAYERS+$700+40
+
+    ;yellow
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00000000
+    dta %00100000
+    dta %00100000
+    dta %00110000
+    dta %00000000
 
     icl "background.asm"
 
