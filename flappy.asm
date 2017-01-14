@@ -80,11 +80,6 @@ codestart
     mva #$FA COLPM2 ;1C, 2B, FA
     mva #$0E COLPM3 ;0E, DE
 
-    mva #68 HPOSP0
-    mva #68+7 HPOSP1
-    mva #68+7 HPOSP2
-    mva #68 HPOSP3
-
     ;mva #$01 SIZEP0
     ;mva #$01 SIZEP1
     ;mva #$01 SIZEP2
@@ -1613,6 +1608,14 @@ drawPlayer
                 txa
                 pha
 
+                lda playerX
+                sta HPOSP0
+                sta HPOSP3
+                clc
+                adc #7
+                sta HPOSP1
+                sta HPOSP2
+
                 lda oldPlayerY
                 sta epSta1+1
                 sta epSta2+1
@@ -1753,8 +1756,271 @@ finishDrawPlayer
                 rts
 
 oldPlayerY      dta 40
-playerY         dta 40
-playerWing      dta 2 ;0-wing up, 1-wing level, 2-wing down
+playerX         dta 64
+playerY         dta 32
+playerWing      dta 1 ;0-wing up, 1-wing level, 2-wing down
+
+;=============================================================
+;---------------- Check collision with pipe ------------------
+;=============================================================
+checkCollision
+                pha
+                txa
+                pha
+                tya
+                pha
+
+                ;start with no collision
+                lda #0
+                sta collision
+
+                ;calculate real X value of pipe (pipe's left edge)
+                lda pipe1X
+                sec
+                sbc #4 ;subtract 4 due to sentinel characters
+                asl
+                asl
+                clc
+                adc pipe1XOffset
+                sta pipeRealX
+
+                ;check if player is within the vertical stripe of the pipe, if not then exit; also calculate playerRealX
+                lda playerX
+                sec
+                sbc #64 ;subtract 64 and add 12 (bird width-1)
+                sta playerRealX
+                clc
+                adc #12
+                cmp pipeRealX
+                jmi finishCheckCollision
+                sec
+                ;subtract 64 and subtract 16 (pipe width), so subtract 80 in total, but we've already subtracted 52 so only 28 left
+                sbc #28
+                cmp pipeRealX
+                jpl finishCheckCollision
+
+                ;player is within vertical stripe. calculate Y value of first free line of the opening...
+                lda pipe1UpperEndRow
+                clc
+                adc #1 ;calculate first empty row
+                asl
+                asl
+                asl ;calculate first empty line
+                sta firstFreeLine
+
+                ;...and calculate [last free line + 1]
+                lda pipe1UpperEndRow
+                clc
+                adc gap
+                asl
+                asl
+                asl
+                sta firstNonFreeLine
+
+                ;check if player collides with upper or lower part of the pipe; also calculate playerRealY
+                lda playerY
+                sec
+                sbc #32
+                sta playerRealY
+                cmp firstFreeLine
+                bmi collisionUp ;player collides with the upper part
+                clc
+                adc #17 ;add bird height-1
+                cmp firstNonFreeLine
+                jpl collisionDown ;player collides with the lower part
+                jmp finishCheckCollision
+
+collisionUp
+                ;playerRealY in A
+
+                ;get iy1 and iy2, clamp iy2 if needed
+                sta iy1
+                dec firstFreeLine ;it becomes lastNonFreeLine
+                lda firstFreeLine
+                sta iy2
+                lda playerY
+                sec
+                sbc #15
+                cmp iy2
+                bpl @+
+                sta iy2
+
+                ;get and clamp ix1 and ix2
+@               lda pipeRealX
+                sta ix1
+                lda playerRealX
+                cmp ix1
+                bmi @+
+                sta ix1
+@               lda pipeRealX
+                clc
+                adc #15
+                sta ix2
+                lda playerX
+                sec
+                sbc #52 ;subtract 64 and add 12
+                cmp ix2
+                bpl check9Pixels
+                sta ix2
+
+check9Pixels    ;check if any of the following pixels has "1" in collisionMask to approximate pixel-perfect collision:
+
+                ;(ix1,         iy1)       (ix1/2+ix2/2,         iy1)      (ix2,         iy1)
+                ;(ix1, iy1/2+iy2/2)       (ix1/2+ix2/2, iy1/2+iy2/2)      (ix2, iy1/2+iy2/2)
+                ;(ix1,         iy2)       (ix1/2+ix2/2,         iy2)      (ix2,         iy2)
+
+                ;where ix1,ix2,iy1,iy2 denote intersection rectangle between player and pipe
+
+
+                ;make ix1,ix2,iy1,iy2 relative to the player
+                lda ix1
+                sec
+                sbc playerRealX
+                sta ix1
+                lda ix2
+                sec
+                sbc playerRealX
+                sta ix2
+                lda iy1
+                sec
+                sbc playerRealY
+                sta iy1
+                lda iy2
+                sec
+                sbc playerRealY
+                sta iy2
+
+
+                ;check (ix1,iy1) and (ix2,iy1)
+                ldx iy1
+                lda times13,X
+                clc
+                adc ix1
+                tax
+                stx coltemp
+                lda collisionMask,X
+                jne setCol
+                ldx iy1
+                lda times13,X
+                clc
+                adc ix2
+                tax
+                lda collisionMask,X
+                jne setCol
+
+                ;check the pixel halfway in between (ix1,iy1) and (ix2,iy1)
+                lsr coltemp
+                txa
+                lsr
+                clc
+                adc coltemp
+                tax
+                lda collisionMask,X
+                jne setCol
+
+                ldy #2
+                ;check (ix1,iy2) and (ix2,iy2)
+colTwice        ldx iy2
+                lda times13,X
+                clc
+                adc ix1
+                tax
+                lda collisionMask,X
+                jne setCol
+                ldx iy2
+                lda times13,X
+                clc
+                adc ix2
+                tax
+                lda collisionMask,X
+                bne setCol
+
+                ;check the pixel halfway in between (ix1,iy2) and (ix2,iy2)
+                ldx iy2
+                lda times13,X
+                clc
+                adc ix1
+                lsr
+                sta coltemp
+                lda times13,X
+                clc
+                adc ix2
+                lsr
+                clc
+                adc coltemp
+                tax
+                lda collisionMask,X
+                bne setCol
+
+                ;repeat for iy halfway between iy1 and iy2
+                lda iy1
+                lsr
+                sta coltemp
+                lda iy2
+                lsr
+                clc
+                adc coltemp
+                sta iy2
+                dey
+                bne colTwice
+
+                jmp finishCheckCollision
+
+collisionDown
+                ;playerRealBottomEdge in A
+                sta iy2
+                lda firstNonFreeLine
+                sta iy1
+                lda playerRealY
+                cmp iy1
+                bmi @+
+                sta iy1
+
+@               lda pipeRealX
+                sta ix1
+                lda playerRealX
+                cmp ix1
+                bmi @+
+                sta ix1
+@               lda pipeRealX
+                clc
+                adc #15
+                sta ix2
+                lda playerX
+                sec
+                sbc #52 ;subtract 64 and add 12
+                cmp ix2
+                bpl @+
+                sta ix2
+@               jmp check9Pixels
+
+setCol
+                lda #1
+                sta collision
+
+finishCheckCollision
+                pla
+                tay
+                pla
+                tax
+                pla
+                rts
+
+collision        dta 0 ;0-no collision, 1-collision with first pipe
+firstNonFreeLine dta 0
+firstFreeLine    dta 0
+pipeRealX        dta 0
+playerRealX      dta 0
+playerRealY      dta 0
+coltemp          dta 0
+
+ix1              dta 0
+ix2              dta 0
+iy1              dta 0
+iy2              dta 0
+
+times13          dta 0,13,26,39,52,65,78,91,104,117,130,143,156,169,182,195,208,221
+
 
 ;=============================================================
 ;---------------- Game loop ----------------------------------
@@ -1769,23 +2035,14 @@ gameLoop
                 jsr undrawPipe
                 ;jsr generateScreenData
 
-               /*Decimal
-                   14
-                    |
-                10  | 6
-                  \ |/
-              11-- 15 ---7
-                  / |\
-                 9  | 5
-                    |
-                   13*/
 
                 ;right
                 lda PORTA
                 and #$08
                 bne @+
-                adb pipe1XOffset #$01
-                inc playerY
+                ;adb pipe1XOffset #$01
+                ;inc pipe1UpperEndRow
+                inc playerX
                 inc playerWing
                 lda playerWing
                 cmp #3
@@ -1797,14 +2054,27 @@ gameLoop
 @               lda PORTA
                 and #$04
                 bne @+
-                sbb pipe1XOffset #$01
-                dec playerY
+                ;sbb pipe1XOffset #$01
+                ;dec pipe1UpperEndRow
+                dec playerX
                 dec playerWing
                 lda playerWing
                 cmp #255
                 bne @+
                 lda #2
                 sta playerWing
+
+                ;down
+@               lda PORTA
+                and #$02
+                bne @+
+                inc playerY
+
+                ;up
+@               lda PORTA
+                and #$01
+                bne @+
+                dec playerY
 
 @               lda pipe1XOffset
                 cmp #4
@@ -1842,20 +2112,35 @@ chbaseCalcEnd:
                 mva #0 pipe1Or2
                 jsr prepareDataForPipe1
 
-                mva #16 row
+                mva #0 upOrDown
+                ldx pipe1UpperEndRow
+                stx row
+                cpx #15
+                bmi @+
+                cpx #21
+                bpl @+
+                jsr generateSides ;only generate sides for rows: 15,16,17,18,19 or 20
+@               jsr drawPipeEnd
+
+                dex
+                stx row
                 jsr drawPipeUpward
 
-                mva #17 row
-                mva #0 upOrDown
-                jsr generateSides
-                jsr drawPipeEnd
-
-                mva #19 row
                 mva #76 upOrDown
+                lda pipe1UpperEndRow
+                clc
+                adc gap
+                tax
+                stx row
+                cpx #15
+                bmi @+
+                cpx #21
+                bpl @+
                 jsr generateSides
-                jsr drawPipeEnd
+@               jsr drawPipeEnd
 
-                mva #20 row
+                inx
+                stx row
                 jsr drawPipeDownward
 
 
@@ -1863,26 +2148,50 @@ chbaseCalcEnd:
                 mva #32 pipe1Or2
                 jsr prepareDataForPipe2
 
-                mva #14 row
+                mva #0 upOrDown
+                ldx pipe2UpperEndRow
+                stx row
+                cpx #15
+                bmi @+
+                cpx #21
+                bpl @+
+                jsr generateSides
+@               jsr drawPipeEnd
+
+                dex
+                stx row
                 jsr drawPipeUpward
 
-                mva #15 row
-                mva #0 upOrDown
-                jsr generateSides
-                jsr drawPipeEnd
-
-                mva #17 row
                 mva #76 upOrDown
+                lda pipe2UpperEndRow
+                clc
+                adc gap
+                tax
+                stx row
+                cpx #15
+                bmi @+
+                cpx #21
+                bpl @+
                 jsr generateSides
-                jsr drawPipeEnd
+@               jsr drawPipeEnd
 
-                mva #18 row
+                inx
+                stx row
                 jsr drawPipeDownward
 
 
                 jsr drawPlayer
 
 
+                jsr checkCollision
+                lda collision
+                beq @+
+                mva #$5E COLPF2
+                jmp finishGameLoop
+@               mva #$98 COLPF2
+
+
+finishGameLoop
                 lda VCOUNT
                 cmp #30
                 bcs @+
@@ -1894,11 +2203,14 @@ chbaseCalcEnd:
 @               pla
                 rts
 
-pipe1X          dta 10
-pipe1XOffset    dta $0
-pipe2X          dta 26
+pipe1X              dta 10
+pipe1XOffset        dta $0
+pipe2X              dta 26
+pipe1UpperEndRow    dta 5
+pipe2UpperEndRow    dta 13
+gap                 dta 6
 
-maxVCount       dta $0
+maxVCount           dta $0
 
 ;=============================================================
 ;---------------- DLI routine --------------------------------

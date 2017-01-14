@@ -1,10 +1,7 @@
 NPP_SAVE
 cd $(CURRENT_DIRECTORY)
 
-mads flappy.asm -o:flappy.xex
-IF $(EXITCODE)!=0 GOTO EXITWITHERROR
-
-mads flappy.asm -l:flappy.lst
+mads flappy.asm -o:flappy.xex -l:flappy.lst -t:flappy.sym
 IF $(EXITCODE)!=0 GOTO EXITWITHERROR
 
 mads flappy.asm -o:flappy_c.xex -d:INCLUDE_CASLOADER
